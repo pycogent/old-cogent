@@ -1,0 +1,126 @@
+<html>
+	<head>
+		<title>Test Page for InputLabel object in bio_input_widgets.js</title>
+		<script type="text/javascript" src="../../../../jsunit/app/jsUnitCore.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/error_handler.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/utils/general_utils.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/validation/input_tools.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/validation/bio_input_widgets.js"></script>
+	</head>
+	<body>
+		<script language="javascript">
+			/*
+			test_InputLabel.html
+
+			Tests of InputLabel class.
+
+			Revision History:
+			10/25/03 Amanda Birmingham: set up tests
+			*/
+
+			//------------------------------------------------
+			//******
+			//Test constants
+			var gFormElmId = "label1";
+			var gLabelIndex = 12;
+			//******
+
+			//******
+			//Helper functions
+			function setFormValue(strValue) {
+				//put a nonnumber value in the form element
+				document.getElementById(gFormElmId).value = strValue;
+			} //end setFormValue
+
+			function getFormValue() {
+				//get the value in the form element
+				return document.getElementById(gFormElmId).value;
+			} //end getFormValue
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Tests of init
+			//******
+			function test_init_noIndex() {
+				/* Should throw error if no index parameter given */
+
+				try {
+					var test = new InputLabel(gobjErrors, gFormElmId);
+					fail("init should fail if not passed an index");
+				} catch (e) {if (e instanceof JsUnitException){throw e;}}
+			} //end test_init_noIndex
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Tests of validate
+
+			//******
+			function test_validate() {
+				/* Should validate label for all cases */
+
+				var possible_labels = [37, "	0.67  f", "blue", "", true];
+				var test = new InputLabel(gobjErrors, gFormElmId, gLabelIndex);
+
+				//loop over the test values
+				for (var strIndex in possible_labels) {
+					//put a test value in the form element
+					var strValue = possible_labels[strIndex];
+					setFormValue(strValue);
+
+					//call getFormvalue and check for correct output
+					var is_error_free = test.validate();
+					assertEquals(true, is_error_free);
+				} //next test value
+			} //end test_validate
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Tests of the _autocorrect method
+			//******
+			function test_autocorrect_noChange() {
+				/* Should not alter an existing label */
+
+				var testValue = "yargabarga ";
+
+				//create input object
+				var test = new InputLabel(gobjErrors, gFormElmId, gLabelIndex);
+				setFormValue(testValue);
+
+				//call autoCorrect
+				form_obj = document.getElementById(gFormElmId)
+				test._autocorrect(form_obj);
+
+				//check that the return value is equal to the set value
+				assertEquals(testValue, getFormValue());
+			} //end test_autocorrect_noChange
+			//******
+
+			//******
+			function test_autocorrect() {
+				/* Should fill in a label if one is missing */
+
+				//create input object
+				var test = new InputLabel(gobjErrors, gFormElmId, gLabelIndex);
+				setFormValue("");
+
+				//call autoCorrect
+				form_obj = document.getElementById(gFormElmId)
+				test._autocorrect(form_obj);
+
+				//create the correct value
+				var correct_label = "sequence " + gLabelIndex;
+
+				//check that the return value is equal to the set value
+				assertEquals(correct_label, getFormValue());
+			} // end test_autocorrect
+			//******
+			//------------------------------------------------
+		</script>
+		<form>
+			Label: <input type = "text" name = "label1" />
+		</form>
+	</body>
+</html>

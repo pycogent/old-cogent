@@ -1,0 +1,440 @@
+<html>
+	<head>
+		<title>Test Page for DynamicTable class of sortable_table.js</title>
+		<script type="text/javascript" src = "../../../../jsunit/app/jsUnitCore.js"></script>
+		<script type="text/javascript" src = "../../../js-code/evo/validation/string_validate.js"></script>
+		<script type="text/javascript" src = "../../../js-code/evo/utils/general_utils.js"></script>
+		<script type="text/javascript" src = "../../../js-code/evo/utils/web_utils.js"></script>
+		<script type="text/javascript" src = "../../../js-code/evo/controls/sortable_table.js"></script>
+	</head>
+	<body>
+		<script type = "text/javascript">
+			/*
+			test_DynamicTable.html
+
+			Tests of methods of DynamicTable class.
+
+			Revision History:
+			Written 2003 by Amanda Birmingham
+			*/
+
+			//******
+			//create a dummy dyntable object that will gracefully handle any user actions
+			//that are taken before the real object is created
+			var gobjDynTable = new Object();
+			gobjDynTable.replaceColumn = function () {alert ("Dynamic table is not created yet.");}
+
+			//LITERAL INPUTS:
+			//the ids of sections of the table
+			var gstrTableId = "structDataTable";
+			var gstrTheadId = "tableHead";
+			var gstrTbodyId = "tableBody";
+			//the ids of rows and of header cells
+			var garrRowIds = new Array("structure0", "structure1", "structure2", "structure3", "structure4");
+			var garrHeaderIds = new Array(	"structureselect",
+											"structureindex",
+											'structurename',
+											'structurebest_index$^^MI:variation',
+											'structureaverage:MI:variation');
+
+			//NOTE that one of the header ids has characters in it that are special to regular
+			//expressions.  This tests that the getColIndexByHeaderId can adequately search for
+			//such strings literally, rather than misinterpreting them as special characters.
+			//******
+
+			//helper function
+			//******
+			function getColValues(intColIndex) {
+				var strValue, intNumRows;
+				var arrReturn = new Array();
+				var objTbody = document.getElementById(gstrTbodyId);
+				intNumRows = objTbody.rows.length;
+
+				for (var intIndex = 0; intIndex < intNumRows; intIndex++) {
+					strValue = objTbody.rows[intIndex].cells[intColIndex].innerText;
+					arrReturn.push(strValue);
+				} //next input index
+
+				return arrReturn;
+			} //end getColValues
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Tests of the constructor function
+			//******
+			function testSuccessfulCreation() {
+				//test that a DynamicTable can be successfully created if given correct arguments
+
+				var strCorrectState = "tableId: " + gstrTableId + "; theadId: " + gstrTheadId + "; tbodyId: " + gstrTbodyId + "; ";
+				var objDynTable = new DynamicTable(gstrTableId, gstrTheadId, gstrTbodyId);
+				assertEquals(strCorrectState, objDynTable.toString());
+			} //end testSuccessfulCreation
+			//******
+
+			//******
+			function testFailedCreation() {
+				//check that DynamicTable constructor fails correctly if given any incorrect arguments
+
+				try {
+					//create a dynamic table with a nonstring first argument
+					var objDynTable = new DynamicTable(new Object(), gstrTheadId, gstrTbodyId);
+					//if we didn't error out, that's a problem
+					fail("DynamicTable constructor should fail if first argument is not a string");
+				} //end try
+				catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				try {
+					//create a dynamic table with an undefined second argument
+					objDynTable = new DynamicTable(gstrTableId, undefined, gstrTbodyId);
+					fail("DynamicTable constructor should fail if second argument is not a string");
+				} //end try
+				catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				try {
+					//creat a dynamic table with a nonstring third argument
+					objDynTable = new DynamicTable(gstrTableId, gstrTheadId, 12);
+					fail("DynamicTable constructor should fail if third arugment is not a string");
+				} //end try
+				catch (e) {if (e instanceof JsUnitException){throw e;}}
+			} //end testFailedCreation
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Tests of the getColIndexByHeaderId method
+			//******
+			function test_getColIndex_goodArgs() {
+				//create a dynamic table
+				var objDynTable = new DynamicTable(gstrTableId, gstrTheadId, gstrTbodyId);
+
+				//loop over all the (good) header ids
+				for (var intCorrectIndex in garrHeaderIds) {
+					//get the index for that column given by getColIndexByHeaderId
+					var intFoundIndex = objDynTable.getColIndexByHeaderId(garrHeaderIds[intCorrectIndex]);
+					//note the parseInt, to make sure the index is treated like a number not a key (string)
+					assertEquals(parseInt(intCorrectIndex), intFoundIndex);
+				} //next header index
+			} //end test_getColIndex_goodArgs
+			//******
+
+			//******
+			function test_getColIndex_badArgs() {
+				var arrBadHeaderIds = new Array("blue", 15, undefined, null);
+
+				//create a dynamic table
+				var objDynTable = new DynamicTable(gstrTableId, gstrTheadId, gstrTbodyId);
+
+				//loop over each of the bad header ids
+				for (var intHeaderIndex in arrBadHeaderIds) {
+					//get the index for the bad header id
+					var intFoundIndex = objDynTable.getColIndexByHeaderId(arrBadHeaderIds[intHeaderIndex]);
+
+					//every bad header should return an undefined
+					assertEquals(undefined, intFoundIndex);
+				} //next bad header index
+			} //end test_getColIndex_badArgs
+			//******
+
+			//******
+			//05/14/03
+			function test_getColIndex_inexactMatch() {
+				//create a dynamic table
+				var objDynTable = new DynamicTable(gstrTableId, gstrTheadId, gstrTbodyId);
+
+				//get the index by an inexact match
+				var intFoundIndex = objDynTable.getColIndexByHeaderId("structurebest_index", true);
+				assertEquals(3, intFoundIndex);
+
+				//try to get an index for something that doesn't exist by inexact match
+				var intFoundIndex = objDynTable.getColIndexByHeaderId("strictlybest_index", true);
+				assertEquals(undefined, intFoundIndex);
+			} //end test_getColIndex_inexactMatch
+			//******
+
+			//******
+			function test_getColIndex_inexactMultiple() {
+				//create a dynamic table
+				var objDynTable = new DynamicTable(gstrTableId, gstrTheadId, gstrTbodyId);
+
+				//try to get an index by an inexact match that occurs more than once--
+				//make sure there's an error telling you this
+				//try to get an index for something that doesn't exist by inexact match
+				try {
+					var intFoundIndex = objDynTable.getColIndexByHeaderId("MI:variation", true);
+					fail("getColIndexByHeaderId should fail when asked for an inexact match on an id fragment that matches more than one column id");
+				} catch(e) {if (e instanceof JsUnitException){throw e;}}
+			} //end test_getColIndex_inexactMultiple
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Tests of the getRowCellAndVal method
+			//******
+			function testGetRowWgoodArgs() {
+				//test the ability to get a row object either by name or by index
+				//for now, ignore the other two values in the return array (cell & value) ...
+
+				//local variables
+				var intColIndex = 1;
+				var arrRowIdAndIndex = new Array(garrRowIds[1], 1);
+				var arrCellHtml = new Array('<INPUT type=radio value=2 name=rdostructure>',
+											'1',
+											'Struct 2',
+											'2',
+											'0.95');
+				var strCorrectHtml = "";
+				for (var intCellIndex in arrCellHtml) {
+					strCorrectHtml += "<TD>" + arrCellHtml[intCellIndex] + "</TD>\r\n";
+				}//next cell
+				strCorrectHtml = strCorrectHtml.substring(0, strCorrectHtml.length -2);
+
+				//create a dynamic table
+				var objDynTable = new DynamicTable(gstrTableId, gstrTheadId, gstrTbodyId);
+
+				//for each of the two options (use row id or use row index)
+				for (var intIndex in arrRowIdAndIndex) {
+					var varIdOrIndex = arrRowIdAndIndex[intIndex];
+
+					//for each cell in the row
+					for (var intColIndex in arrCellHtml) {
+						var strCellValue = (intColIndex == 0)?"":arrCellHtml[intColIndex];
+						var ascRowCellVal = objDynTable.getRowCellAndVal(varIdOrIndex, intColIndex);
+
+						//make sure that row, cell, and value outputs are correct
+						assertEquals(strCorrectHtml, ascRowCellVal["row"].innerHTML);
+						assertEquals(arrCellHtml[intColIndex], ascRowCellVal["cell"].innerHTML);
+						assertEquals(strCellValue, ascRowCellVal["value"]);
+					} //next cell
+				} //next input option
+			} //end testGetRowWgoodArgs
+			//******
+
+			//******
+			function testGetRowWbadArgs() {
+				//local variables
+				var objDynTable, ascRowCellVal;
+				var intColIndex = 1;
+
+				//create a dynamic table
+				objDynTable = new DynamicTable(gstrTableId, gstrTheadId, gstrTbodyId);
+
+				try {
+					//bad to use a rowid that doesn't exist
+					ascRowCellVal = objDynTable.getRowCellAndVal("structure10", intColIndex);
+					fail("getRowCellAndVal should fail if passed a row id that doesn't exist.");
+				} //end try
+				catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				try {
+					//bad to use a rowindex that doesn't exist
+					ascRowCellVal = objDynTable.getRowCellAndVal(19.5, intColIndex);
+					fail("getRowCellAndVal should fail if passed a row index that doesn't exist.");
+				} //end try
+				catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				try {
+					ascRowCellVal = objDynTable.getRowCellAndVal(-1, intColIndex);
+					fail("getRowCellAndVal should fail if passed a row index that doesn't exist.");
+				} //end try
+				catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				try {
+					ascRowCellVal = objDynTable.getRowCellAndVal(12, intColIndex);
+					fail("getRowCellAndVal should fail if passed a row index that doesn't exist.");
+				} //end try
+				catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+
+				try {
+					//bad to use anything but a string or number as rowindex
+					ascRowCellVal = objDynTable.getRowCellAndVal(new Object(), intColIndex);
+					fail("getRowCellAndVal should fail if passed a row index/id that isn't a string or number.");
+				} //end try
+				catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				try {
+					//bad to use a colindex that doesn't exist
+					ascRowCellVal = objDynTable.getRowCellAndVal(garrRowIds[1], 12);
+					fail("getRowCellAndVal should fail if passed a column index that doesn't exist.");
+				} //end try
+				catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				try {
+					ascRowCellVal = objDynTable.getRowCellAndVal(garrRowIds[1], -12);
+					fail("getRowCellAndVal should fail if passed a column index that doesn't exist.");
+				} //end try
+				catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				try {
+					//bad to use anything but an integer as a colindex
+					ascRowCellVal = objDynTable.getRowCellAndVal(garrRowIds[1], new Object());
+					fail("getRowCellAndVal should fail if passed a column index that is not an integer.");
+				} //end try
+				catch (e) {if (e instanceof JsUnitException){throw e;}}
+			} //end testGetRowWbadArgs
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Test replaceColumn method
+			//******
+			function testReplaceColWbadArgs() {
+				//create a dynamic table
+				objDynTable = new DynamicTable(gstrTableId, gstrTheadId, gstrTbodyId);
+
+				try {
+					//bad to use a nonexistent column name
+					objDynTable.replaceColumn("blue", gascReplaceValues);
+					fail("replaceColumn should fail if passed a column id that doesn't exist");
+				} //end try
+				catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				try {
+					objDynTable.replaceColumn(new Object(), gascReplaceValues);
+					fail("replaceColumn should fail if passed a column id that isn't a string");
+				} //end try
+				catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				try {
+					//bad to pass an array that contains rowids/indices that don't exist
+					var ascTestArray = new Array();
+					ascTestArray["blue"] = "15";
+					objDynTable.replaceColumn(garrHeaderIds[2], ascTestArray);
+					fail("replaceColumn should fail if passed an array containing nonexistant row ids");
+				} //end try
+				catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				try {
+					ascTestArray = new Array();
+					ascTestArray[15] = "blue";
+					objDynTable.replaceColumn(garrHeaderIds[2], ascTestArray);
+					fail("replaceColumn should fail if passed an array containing nonexistant row indices");
+				} //end try
+				catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				try {
+					ascTestArray = new Array();
+					ascTestArray[15] = "blue";
+					objDynTable.replaceColumn(garrHeaderIds[2], "blue");
+					fail("replaceColumn should fail if second arg is not an array");
+				} //end try
+				catch (e) {if (e instanceof JsUnitException){throw e;}}
+			} //end testReplaceColWbadArgs
+			//******
+
+			//******
+			function testReplaceColWgoodArgs() {
+				//if the first argument is a nonstring value, it is coerced
+				//if second argument is a hash keyed by rowid, gets rows by id
+				//if second argument is an array but not a hash, gets rows by index rather than id
+				//if second argument is an array that doesn't specify values for every row, unspecified rows are left alone
+
+				//local variables
+				var arrCorrectOutputs, ascRowIds, arrNonConsecutive, arrInputs;
+				var arrCurCorrect, arrCurInput, arrRealState;
+				var objTbody = document.getElementById(gstrTbodyId);
+
+				//set up test data
+				var intColIndex = 2;
+				arrCorrectOutputs = new Array();
+				arrCorrectOutputs[0] = new Array("Struct 1", "Struct 2", "Struct 3", "Struct 4", "Struct 5");
+				arrCorrectOutputs[1] = new Array(16, 8, 4, 2, 1);
+				arrCorrectOutputs[2] = new Array("name1", "name2", "name3", "name4", "name5");
+				arrCorrectOutputs[3] = new Array("test1", "test2", "name3", "name4", "test5");
+
+				ascRowIds = new Array();
+				for (var intIndex in garrRowIds) {ascRowIds[garrRowIds[intIndex]] = arrCorrectOutputs[1][intIndex];}
+				arrNonConsecutive = new Array("test1", "test2");
+				arrNonConsecutive[4] = "test5";
+				arrInputs = new Array(undefined, ascRowIds, undefined, undefined, arrNonConsecutive);
+
+				//create a dynamic table
+				objDynTable = new DynamicTable(gstrTableId, gstrTheadId, gstrTbodyId);
+
+				//for each correct output
+				for (var intOutputIndex = 0; intOutputIndex < arrCorrectOutputs.length; intOutputIndex++) {
+					//get the correct output
+					arrCurCorrect = arrCorrectOutputs[intOutputIndex];
+
+					//get the input for this index if one is defined; if not, it is same as the outputs
+					arrCurInput = arrInputs[intOutputIndex];
+					if (arrCurInput == undefined) {arrCurInput = arrCurCorrect;}
+
+					//call replaceColumn
+					objDynTable.replaceColumn(garrHeaderIds[intColIndex], arrCurInput);
+
+					//get the real state after the replace and compare to correct state
+					arrRealState = getColValues(intColIndex);
+					assertEquals(arrCurCorrect.toString(), arrRealState.toString());
+				} //next test
+			} //end testReplaceColWgoodArgs
+			//******
+
+			//------------------------------------------------
+		</script>
+		<p>
+			<button onclick = "gobjDynTable = new DynamicTable(gstrTableId, gstrTheadId, gstrTbodyId);">Create Dynamic Table</button>
+		</p>
+		<table id = "structDataTable">
+			<thead id = "tableHead">
+				<tr>
+					<th id = "structureselect">
+						Select
+					</th>
+					<th id = "structureindex">
+						Index
+					</th>
+					<th id = "structurename">
+						Name
+					</th>
+					<th id = "structurebest_index$^^MI:variation">
+						MI Best Index
+					</th>
+					<th id = "structureaverage:MI:variation">
+						MI Average
+					</th>
+				</tr>
+			</thead>
+			<tbody id = "tableBody">
+				<tr id = "structure0">
+					<td><input type = "radio" name = "rdostructure" value = "1" /></td>
+					<td>0</td>
+					<td>Struct 1</td>
+					<td>5</td>
+					<td>0.05</td>
+				</tr>
+				<tr id = "structure1">
+					<td><input type = "radio" name = "rdostructure" value = "2" /></td>
+					<td>1</td>
+					<td>Struct 2</td>
+					<td>2</td>
+					<td>0.95</td>
+				</tr>
+				<tr id = "structure2">
+					<td><input type = "radio" name = "rdostructure" value = "3" /></td>
+					<td>2</td>
+					<td>Struct 3</td>
+					<td>1</td>
+					<td>1.05</td>
+				</tr>
+				<tr id = "structure3">
+					<td><input type = "radio" name = "rdostructure" value = "4" /></td>
+					<td>3</td>
+					<td>Struct 4</td>
+					<td>6</td>
+					<td>-0.05</td>
+				</tr>
+				<tr id = "structure4">
+					<td><input type = "radio" name = "rdostructure" value = "5" /></td>
+					<td>4</td>
+					<td>Struct 5</td>
+					<td>3</td>
+					<td>0.05</td>
+				</tr>
+			</tbody>
+		</table>
+		<br />
+		<button onclick = "gobjDynTable.replaceColumn('structurebest_index:MI:variation', new Array(16,8,4,2,1));">Replace BestIndexes</button>
+	</body>
+</html>

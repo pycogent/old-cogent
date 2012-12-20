@@ -1,0 +1,150 @@
+<html>
+	<head>
+		<title>Test Page for InputWidget object in input_tools.js</title>
+		<script type="text/javascript" src="../../../../jsunit/app/jsUnitCore.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/error_handler.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/utils/general_utils.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/validation/input_tools.js"></script>
+	</head>
+	<body>
+		<script type="text/javascript">
+
+			/*
+			test_InputWidget.html
+
+			Tests of the InputWidget class.
+
+			Revision History:
+			Written 2003 by Amanda Birmingham
+			10/09/03 Amanda Birmingham: shortened lines, changed names of
+				methods that have been renamed according to guidelines,
+				fixed paths.
+			10/13/03 Amanda Birmingham: added
+				test_getFormValue_autocorrectReturn
+			10/25/03 Amanda Birmingham: created from public tests
+			*/
+
+			/*
+			No test for _reset_msgs because it just resets some variables
+			No test for _autocorrect because it just does a return
+			No test for _fill_msgs method because it just does a return
+			*/
+
+			//------------------------------------------------
+			//******
+			//test constants
+			var gFormElmId = "txtObject";
+
+			//sythetic errors
+			var gErrorMsgs = ["Sequences must all have same length.",
+								"Sequences may contain only UCGTN and -"];
+			var gWarningMsgs = ["Too many gaps", "Too many degenerate bases"];
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Test the init function
+			//No test of good init ... just sets properties
+			//******
+			function test_init_badArgs() {
+				//should fail if not passed an errors obj
+				try {
+					var objInputObj = new InputWidget(gFormElmId);
+					fail("init should fail if not passed an error object");
+				} catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				//should fail if not passed nonneg integer castable screenid
+				try {
+					var objInputObj =
+						new InputWidget(gobjErrors, undefined, "blue");
+					fail("init should fail screenid is not nonneg integer");
+				} catch (e) {if (e instanceof JsUnitException){throw e;}}
+			} //end test_init_badArgs
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Test _collect_msgs method
+			//******
+			function test_collect_msgs_errs_noChildren() {
+				/* Should collect errors only from self if no children */
+
+				//create an InputWidget and give it errors
+				var test, error_msgs;
+				test = new InputWidget(gobjErrors, gFormElmId);
+				test._error_msgs = gErrorMsgs;
+
+				//call _collect_msgs
+				error_msgs = test._collect_msgs();
+
+				//make sure we got right output
+				assertEquals(gErrorMsgs.toString(), error_msgs.toString());
+			} //end test_collect_msgs_errs_noChildren
+			//******
+
+			//******
+			function test_collect_msgs_warns_noChildren() {
+				/* Should collect warnings only from self if no children */
+
+				//create an InputWidget and give it errors
+				var test, warning_msgs;
+				test = new InputWidget(gobjErrors, gFormElmId);
+				test._warning_msgs = gWarningMsgs;
+
+				//call _collect_msgs with false toggle (warnings, no errs)
+				warning_msgs = test._collect_msgs(false);
+
+				//make sure we got right output
+				assertEquals(gWarningMsgs.toString(), warning_msgs.toString());
+			} //end test_collect_msgs_warns_noChildren
+			//******
+
+			//******
+			function test_collect_msgs_withChildren() {
+				/* Should collect all msgs from widgets children and return
+
+				No need to test for both warnings and errors, since both
+				work the same.
+				*/
+
+				//local variables
+				var test, child_1, child_2;
+				var real_msgs;
+				var correct_msgs = new Array();
+
+				//create an InputWidget and give it some errors
+				test = new InputWidget(gobjErrors, gFormElmId);
+				test._error_msgs = gErrorMsgs;
+
+				//create a child for it, with errors and no errorelmid
+				child_1 = new InputWidget(gobjErrors, gFormElmId);
+				child_1._error_msgs = gErrorMsgs;
+				test._children["child1"] = child_1;
+
+				//create another child for it, with errors
+				child_2 = new InputWidget(gobjErrors, gFormElmId);
+				child_2._error_msgs = gErrorMsgs;
+				test._children["child2"] = child_2;
+
+				//create correct error array
+				for (var index = 0; index < 3; index++) {
+					for (var strIndex in gErrorMsgs) {
+						correct_msgs.push(gErrorMsgs[strIndex]);
+					} //next error msgs
+				} //next set of error msgs
+
+				//call _collect_msgs
+				real_msgs = test._collect_msgs();
+
+				//make sure we got right output in the error div
+				assertEquals(correct_msgs.toString(),
+					real_msgs.toString());
+			} //end test_collect_msgs_withChildren
+			//******
+			//------------------------------------------------
+		</script>
+		<form>
+			Object: <input type = "text" name = "txtObject" />
+		</form>
+	</body>
+</html>

@@ -1,0 +1,216 @@
+<html>
+	<head>
+		<title>Test Page for InputWidget object in input_tools.js</title>
+		<script type="text/javascript" src="../../../../jsunit/app/jsUnitCore.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/error_handler.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/utils/general_utils.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/validation/input_tools.js"></script>
+	</head>
+	<body>
+		<script type="text/javascript">
+
+			/*
+			test_InputWidget.html
+
+			Tests of the InputWidget class.
+
+			Revision History:
+			Written 2003 by Amanda Birmingham
+			10/09/03 Amanda Birmingham: shortened lines, changed names of
+				methods that have been renamed according to guidelines,
+				fixed paths.
+			10/13/03 Amanda Birmingham: added
+				test_getFormValue_autocorrectReturn
+			10/25/03 Amanda Birmingham: updated tests for changes to
+				interface; added test_validate_noKidsWithWarnings; moved
+				private tests into another page; added test_addChildren
+			*/
+
+			/*
+			No test for getValidatedData because it just returns property
+			*/
+
+			//------------------------------------------------
+			//******
+			//test constants
+			var gFormElmId = "txtObject";
+
+			//sythetic errors
+			var gErrorMsgs = ["Sequences must all have same length.",
+								"Sequences may contain only UCGTN and -"];
+			var gWarningMsgs = ["Too many gaps", "Too many degenerate bases"];
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Test that getFormValue returns the value placed in the textbox
+			//(which can really only be a string, so that's all I test)
+			//******
+			function test_getFormValue() {
+				var arrTestValues = new Array();
+				arrTestValues.push("blue");
+				arrTestValues.push("");
+				arrTestValues.push("'");
+				arrTestValues.push("15");
+
+				//create input object
+				var objInputObj = new InputWidget(gobjErrors, gFormElmId);
+
+				//loop over all test values
+				for (var strIndex in arrTestValues) {
+					//get the current test value
+					var strTestValue = arrTestValues[strIndex];
+
+					//set it in the textbox
+					document.getElementById(gFormElmId).value =
+						strTestValue;
+
+					//get the value back out of the object
+					var strTxtValue = objInputObj.getFormValue();
+					assertEquals(strTestValue, strTxtValue);
+				} //next test value
+			} //end test_getFormValue
+			//******
+
+			//******
+			function test_getFormValue_autocorrectReturn() {
+				/* Should return value from autocorrect if there is one */
+
+				correct_output = "blue";
+				document.getElementById(gFormElmId).value = " blue ";
+
+				//create input object and set its autocorrect
+				var input_obj = new InputWidget(gobjErrors, gFormElmId);
+				input_obj._autocorrect = function() {return correct_output;}
+
+				//make sure the returned value is that from the autocorrect,
+				//not that in the textbox
+				var real_output = input_obj.getFormValue();
+				assertEquals(correct_output, real_output);
+			} //end test_getFormValue_autocorrectReturn
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Test the updateMsgs method
+			//(doesn't take any args, so no bad args test.)
+			//******
+			function test_updateMsgs() {
+				/* Should return both errors and warnings */
+				//local variables
+				var test, real_msgs;
+				var correct_msgs = {"errors":gErrorMsgs,
+									"warnings":gWarningMsgs}
+
+				//create an InputWidget and give it errors
+				test = new InputWidget(gobjErrors, gFormElmId);
+				test._error_msgs = gErrorMsgs;
+				test._warning_msgs = gWarningMsgs;
+
+				//call updateMsgs
+				real_msgs = test.updateMsgs();
+
+				//make sure we got right output in the error div
+				assertEquals(correct_msgs.toString(), real_msgs.toString());
+			} //end test_updateMsgs
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Tests of validate
+			//******
+			function test_validate_noKidsNoErrors() {
+				/* Should return true on childless, err-free widget */
+				//create an InputWidget
+				var test =
+					new InputWidget(gobjErrors, gFormElmId);
+
+				//call validate
+				var is_valid = test.validate();
+				assertEquals(true, is_valid);
+			} //end test_validate_noKidsNoErrors
+			//******
+
+			//******
+			function test_validate_noKidsWithErrors() {
+				/* Should return false on childless widget w/errors */
+
+				//create an InputWidget
+				var test = new InputWidget(gobjErrors, gFormElmId);
+
+				//override its fillErrorMsgs method to give it some errors;
+				test._fill_msgs =
+					function () {this._error_msgs = gErrorMsgs;}
+
+				//call validate
+				var is_valid = test.validate();
+				assertEquals(false, is_valid);
+			} //end test_validate_noKidsWithErrors
+			//******
+
+			//******
+			function test_validate_noKidsWithWarnings() {
+				/* Should return true on childless widget w/warnings only */
+
+				//create an InputWidget
+				var test = new InputWidget(gobjErrors, gFormElmId);
+
+				//override its fillErrorMsgs method to give it some errors;
+				test._fill_msgs =
+					function () {this._warning_msgs = gWarningMsgs;}
+
+				//call validate
+				var is_valid = test.validate();
+				assertEquals(true, is_valid);
+			} //end test_validate_noKidsWithWarnings
+			//******
+
+			//******
+			function test_validate_withErrorChildren() {
+				/* Should return true for widget w/children w/errors */
+
+				//local variables
+				var test, child_1, child_2, real_msgs;
+				var correct_msgs = new Array();
+
+				//create an InputWidget
+				test = new InputWidget(gobjErrors, gFormElmId);
+
+				//create a child for it, with a validate that returns false
+				child_1 = new InputWidget(gobjErrors, gFormElmId);
+				child_1.validate = function () {return false;}
+
+				//create another child for it, with a validate that returns F
+				child_2 = new InputWidget(gobjErrors, gFormElmId);
+				child_2.validate = function () {return false;}
+
+				//put in the children
+				test.addChildren(child_1, child_2);
+
+				//call validate
+				var is_valid = test.validate();
+				assertEquals(false, is_valid);
+			} //end test_validate_withErrorChildren
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Tests of addChildren
+
+			function test_addChildren() {
+				/* Should add all children given as arguments */
+
+				//create an InputWidget and add some children
+				var test = new InputWidget(gobjErrors, gFormElmId);
+				test.addChildren(new Object(), new Object(), new Object());
+
+				//make sure the widget now has three children
+				assertEquals(3, test._children.length);
+			} //end test_addChildren
+			//------------------------------------------------
+		</script>
+		<form>
+			Object: <input type = "text" name = "txtObject" />
+		</form>
+	</body>
+</html>

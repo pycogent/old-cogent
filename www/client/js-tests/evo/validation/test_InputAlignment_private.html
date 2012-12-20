@@ -1,0 +1,171 @@
+<html>
+	<head>
+		<title>Test Page for InputAlignment object in input_tools.js</title>
+		<script type="text/javascript" src="../../../../jsunit/app/jsUnitCore.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/error_handler.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/utils/general_tools.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/validation/string_validate.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/validation/input_tools.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/alignment_parsers.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/validation/bio_input_widgets.js"></script>
+	</head>
+	<body>
+		<script type="text/javascript">
+			/*
+			test_InputAlignment_private.html
+
+			Tests of private methods of InputAlignment class.
+
+			Revision History:
+			Written 2003 by Amanda Birmingham
+			10/10/03 Amanda Birmingham: wrote test for autocorrect
+			10/13/03 Amanda Birmingham: updated autocorrect test to
+				test for return value as well as value put in txa
+			10/23/03 Amanda Birmingham: added tests of _fill_msgs
+			10/24/03 Amanda Birmingham: added test_fill_msgs_empty to
+				catch bug found elsewhere
+			10/25/03 Amanda Birmingham: updated for changes to interface
+			*/
+
+			/*
+			No need to test init: just defers to superclass
+			No test for the methods inherited from InputObject.
+			*/
+
+			//------------------------------------------------
+			//******
+			//Test constants
+			var gForm_elm_id = "txaAlignment";
+			var gError_elm_id = "divAlignErrors";
+			var gTest_lines = ["Once upon a time", "there was a king"]
+			//******
+
+			//Helper function
+			//******
+			function setFormValue(strValue) {
+				document.getElementById(gForm_elm_id).value = strValue;
+			} //end setFormValue
+			//******
+
+			function getFormValue() {
+				return document.getElementById(gForm_elm_id).value;
+			} //end setFormValue
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Tests of _autocorrect
+
+			//******
+			function test_autocorrect() {
+				//Should correctly remove extra line breaks from txa
+				//and return corrected text
+
+				var form_elm, test, real_val;
+				setFormValue(gTest_lines.join("\n\n\r"));
+				form_elm = document.getElementById(gForm_elm_id);
+
+				test = new InputAlignment(gobjErrors, gForm_elm_id);
+				var output_val = test._autocorrect(form_elm);
+
+				//returned value should be free of extra delimiters
+				assertEquals(gTest_lines.join("\n"), output_val);
+
+				//value in text area should be free of extra delimiters,
+				//(except \r, since windows uses that)
+				var real_val = getFormValue();
+				assertEquals(gTest_lines.join("\r\n"), real_val);
+			} //end test_autocorrect
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Tests of InAlign_fill_msgs
+
+			//******
+			function test_fill_msgs_noErrs() {
+				/* Should return true when error free */
+
+				//local variables
+				var test;
+				var test_text = ">seq1\naguagu\n>seq2\nggua\n>seq3\ncca";
+				var correct_data = [{"label":"seq1", "sequence":"aguagu", "line":0},
+									{"label":"seq2", "sequence":"ggua", "line":1},
+									{"label":"seq3", "sequence":"cca", "line":2}];
+
+				//create and fill an input object
+				test = new InputAlignment(gobjErrors, gForm_elm_id);
+				setFormValue(test_text);
+
+				//call _fill_msgs
+				test._fill_msgs();
+
+				//check that the errormsgs property is empty
+				assertEquals(0, test._error_msgs.length);
+
+				//check that the validatedData property is as expected
+				assertEquals(correct_data.toString(), test.validatedData.toString());
+			} //end test_fill_msgs
+			//******
+
+			//******
+			function test_fill_msgs_withErrors() {
+				/* Should correctly populate errors from parser */
+
+				//local variables
+				var test;
+				var test_text = ">seq1\naguagu\n>seq2\nggua\n>seq3\n";
+				var error_msg = "Label at line 5 appears to be missing its sequence";
+
+				//create and fill an input object
+				test = new InputAlignment(gobjErrors, gForm_elm_id);
+				setFormValue(test_text);
+
+				//call _fill_msgs
+				test._fill_msgs();
+
+				//check that the errormsgs property is empty
+				assertEquals(1, test._error_msgs.length);
+
+				//check that the error message is correct
+				assertEquals(error_msg, test._error_msgs[0]);
+
+				//check that the validatedData property is empty
+				assertEquals(undefined, test.validatedData);
+			} // end test_validate_withErrors
+			//******
+
+			//******
+			function test_fill_msgs_empty() {
+				/* Should correctly populate errors when alignment empty */
+
+				var error_msg = "Please enter an alignment.";
+
+				//create and fill an input object
+				var test = new InputAlignment(gobjErrors, gForm_elm_id);
+				setFormValue("");
+
+				//call _fill_msgs
+				test._fill_msgs();
+
+				//check that the errormsgs property is empty
+				assertEquals(1, test._error_msgs.length);
+
+				//check that the error message is correct
+				assertEquals(error_msg, test._error_msgs[0]);
+
+				//check that the validatedData property is empty
+				assertEquals(undefined, test.validatedData);
+			} //end test_fill_msgs_empty
+			//******
+			//------------------------------------------------
+		</script>
+		<form>
+			<div id = "divAlignment">
+				Object:
+				<textarea name = "txaAlignment" id = "txaAlignment"></textarea>
+				<div id = "divAlignErrors" />
+			</div>
+		</form>
+	</body>
+</html>

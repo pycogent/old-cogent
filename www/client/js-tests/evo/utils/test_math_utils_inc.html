@@ -1,0 +1,122 @@
+<html>
+	<head>
+		<title>Test Page for math_utils.js library</title>
+		<script type = "text/javascript" src="../../../../jsunit/app/jsUnitCore.js"></script>
+		<script type = "text/javascript" src="../../../js-code/evo/utils/math_utils.js"></script>
+	</head>
+	<body>
+		<script type = "text/javascript">
+			/*
+			test_math_utils.html
+
+			Tests of functions in the math_utils library.
+
+			Revision History:
+			Written 2003 by Amanda Birmingham
+			*/
+
+			//------------------------------------------------
+			//Test floatEquals function
+
+			var gstrDefaultEpsilon = "0.05"
+
+			//******
+			//helper function to loop over floatEquals calls and test them
+			function floatEqualsTestLoop(arrTests, blnCorrectOutput) {
+				//local variables
+				var blnIsEqual, strError;
+
+				//loop over each test
+				for (var strIndex in arrTests) {
+					//get the data for this test
+					var arrTestData = arrTests[strIndex];
+					if (arrTestData[2] == undefined) {arrTestData[2] = gstrDefaultEpsilon;}
+
+					//call floatEquals
+					blnIsEqual = floatEquals(arrTestData[0], arrTestData[1], arrTestData[2]);
+
+					//create the error string and call assert
+					strError = "floatEquals call with arguments " + arrTestData.toString() + " got unexpected result";
+					assertEquals(strError, blnCorrectOutput, blnIsEqual);
+				} //next test
+			} //end floatEqualsTestLoop
+			//******
+
+			//******
+			//test some values that should come out equal
+			function test_floatEquals_equal() {
+				var arrTrueTests = new Array();
+				arrTrueTests.push(new Array(0.2, 0.2)); //equal values
+				arrTrueTests.push(new Array(-12.98, -13)); //different but safely w/in epsilon values
+				arrTrueTests.push(new Array(100.97, 101.0195)); //barely w/in default epsilon
+				arrTrueTests.push(new Array(15, 16, 2)); //equal within manual epsilon
+
+				//call helper function
+				floatEqualsTestLoop(arrTrueTests, true);
+			} //end test_floatEquals_equal
+			//******
+
+			//******
+			//test some values that should come out unequal
+			function test_floatEquals_unequal() {
+				var arrFalseTests = new Array();
+				arrFalseTests.push(new Array(15, 16.3)); //vals well outside default epsilon
+				arrFalseTests.push(new Array(0, 0.05)); //precisely the epsilon apart
+				arrFalseTests.push(new Array(0.0001, 0.00011, 0)); //very similar, but with a tiny default epsilon
+
+				//call helper function
+				floatEqualsTestLoop(arrFalseTests, false);
+			} //end test_floatEquals_unequal
+			//******
+
+			//******
+			//ensure correct responses if epsilon is zero
+			function test_floatEquals_zeroEpsilon() {
+				//local variables
+				var blnIsEqual;
+
+				//should return true if the numbers are exactly equal
+				blnIsEqual = floatEquals(0.2, 0.2, 0);
+				assertEquals(true, blnIsEqual);
+
+				//should return false for anything else
+				blnIsEqual = floatEquals(0, 0.00000000000000001, 0);
+				assertEquals(false, blnIsEqual);
+			} //end test_floatEquals_zeroEpsilon
+			//******
+
+			//******
+			//feed the function invalid arguments and make sure it spits errors
+			function test_floatEquals_invalidArgs() {
+				//local variables
+				var blnIsEqual;
+
+				//give it a first argument that isn't a number
+				try {
+					blnIsEqual = floatEquals("15", 12);
+					fail("floatEquals should fail if first argument is not a number");
+				} catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				//give it a second argument that isn't a number
+				try {
+					blnIsEqual = floatEquals(15, "12");
+					fail("floatEquals should fail if second argument is not a number");
+				} catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				//give it a third argument that can't be converted to a number
+				try {
+					blnIsEqual = floatEquals(15, 12, "blue");
+					fail("floatEquals should fail if third argument cannot be converted to a number");
+				} catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				//give it a third argument is < 0
+				try {
+					blnIsEqual = floatEquals(15, 12, -0.1);
+					fail("floatEquals should fail if third argument is < 0");
+				} catch (e) {if (e instanceof JsUnitException){throw e;}}
+			} //end test_floatEquals_invalidArgs
+			//******
+			//------------------------------------------------
+		</script>
+	</body>
+</html>

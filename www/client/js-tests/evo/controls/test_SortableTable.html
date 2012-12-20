@@ -1,0 +1,474 @@
+<html>
+	<head>
+		<title>Test Page for SortableTable class of sortable_table.js</title>
+		<script type = "text/javascript" src = "../../../../jsunit/app/jsUnitCore.js"></script>
+		<script type = "text/javascript" src = "../../../js-code/evo/error_handler.js"></script>
+		<script type = "text/javascript" src = "../../../js-code/evo/validation/string_validate.js"></script>
+		<script type = "text/javascript" src = "../../../js-code/evo/utils/general_utils.js"></script>
+		<script type = "text/javascript" src = "../../../js-code/evo/utils/web_utils.js"></script>
+		<script type = "text/javascript" src = "../../../js-code/evo/controls/sortable_table.js"></script>
+		<style type = "text/css">
+			.hiddenElm {display: none;}
+		</style>
+	</head>
+	<body>
+		<script type = "text/javascript">
+			/*
+			test_SortableTable.html
+
+			Tests of methods of Sortable class.
+
+			Revision History:
+			Written 2003 by Amanda Birmingham
+			*/
+
+			//------------------------------------------------
+			//******
+			//create a dummy dyntable object that will gracefully handle any user actions
+			//that are taken before the real object is created
+			var gobjSorter = new Object();
+			gobjSorter.sort = function () {alert ("Sortable table is not created yet.");}
+
+			//LITERAL INPUTS:
+			//the ids of sections of the table
+			var gstrTableId = "structDataTable";
+			var gstrTheadId = "tableHead";
+			var gstrTbodyId = "tableBody";
+			//the ids of rows and of header cells
+			var garrRowIds = new Array("structure0", "structure1", "structure2", "structure3", "structure4");
+			var garrHeaderIds = new Array(	"structureselect",
+											"structureindex",
+											'structurename',
+											'structurebest_index:MI:variation',
+											'structureaverage:MI:variation');
+
+
+			//******
+			var gascRowsHtml = new Array();
+			gascRowsHtml[0] = new Array(	"<TD><INPUT type=radio value=1 name=rdostructure></TD>\r\n",
+											"<TD class=hiddenElm>0</TD>\r\n",
+											"<TD align=middle>Struct 1</TD>\r\n",
+											"<TD align=middle>5</TD>\r\n",
+											"<TD align=middle>0.05</TD>");
+			gascRowsHtml[1] = new Array(	"<TD><INPUT type=radio value=2 name=rdostructure></TD>\r\n",
+											"<TD class=hiddenElm>1</TD>\r\n",
+											"<TD align=middle>Struct 2</TD>\r\n",
+											"<TD align=middle>2</TD>\r\n",
+											"<TD align=middle>0.95</TD>");
+			gascRowsHtml[2] = new Array(	"<TD><INPUT type=radio value=3 name=rdostructure></TD>\r\n",
+											"<TD class=hiddenElm>2</TD>\r\n",
+											"<TD align=middle>Struct 3</TD>\r\n",
+											"<TD align=middle>1</TD>\r\n",
+											"<TD align=middle>1.05</TD>");
+			gascRowsHtml[3] = new Array(	"<TD><INPUT type=radio value=4 name=rdostructure></TD>\r\n",
+											"<TD class=hiddenElm>3</TD>\r\n",
+											"<TD align=middle>Struct 4</TD>\r\n",
+											"<TD align=middle>6</TD>\r\n",
+											"<TD align=middle>-0.05</TD>");
+			gascRowsHtml[4] = new Array(	"<TD><INPUT type=radio value=5 name=rdostructure></TD>\r\n",
+											"<TD class=hiddenElm>4</TD>\r\n",
+											"<TD align=middle>Struct 5</TD>\r\n",
+											"<TD align=middle>3</TD>\r\n",
+											"<TD align=middle>0.05</TD>");
+
+			//tests on column of text, of integers, and of floating points
+			var garrTests = new Array(); //holds colid, ascending sort row order, descending sort row order
+			garrTests.push(new Array(garrHeaderIds[2], new Array(0,1,2,3,4), new Array(4,3,2,1,0)));
+			garrTests.push(new Array(garrHeaderIds[3], new Array(2,1,4,0,3), new Array(3,0,4,1,2)));
+			garrTests.push(new Array(garrHeaderIds[4], new Array(3,0,4,1,2), new Array(2,1,0,4,3)));
+			//Note that this column needs special treatment because it includes two equal entries.
+			//The algorithm tries to minimize the number of times it has to move an item.
+			//Because of this, the descending sort is not merely the reverse of the ascending sort.
+			//Note that the order of the sort for this col with the equal items also depends on what
+			//was sorted before it, because the sort before it determines the preexisting order of
+			//the rows that are equal in this column.
+			//******
+
+			//******
+			function getCorrectHtml(arrRowIndexes) {
+				var intRowIndex, strCurRow;
+				var blnIncludeTrs = false;
+				var strReturn = "";
+
+				if (arrRowIndexes.length > 1) {blnIncludeTrs = true;}
+
+				for (var intIndex in arrRowIndexes) {
+					intRowIndex = arrRowIndexes[intIndex];
+					strCurRow = gascRowsHtml[intRowIndex].join("");
+					if (blnIncludeTrs) {
+						strCurRow = "<TR id=" + garrRowIds[intRowIndex] + ">\r\n" +
+									strCurRow + "</TR>";
+					} //end if we're including the row tags
+
+					strReturn += strCurRow + "\r\n";
+				} //next row to add
+
+				//cut off the final "\r\n" and return
+				return strReturn.substring(0, strReturn.length - 2);
+			} //end getCorrectHtml
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Tests of the constructor function
+			//******
+			function testSuccessfulCreation() {
+				//local variables
+				var objDynTable, objSortable;
+				var strCorrectState = "dynTable: object; tableId: " + gstrTableId + "; theadId: " + gstrTheadId + "; tbodyId: " + gstrTbodyId + "; tbodyElm: undefined; curColIndex: undefined; ascendingSort: undefined; ";
+
+				//test that a SortableTable can be successfully created if given a dyntable object
+				objDynTable = new DynamicTable(gstrTableId, gstrTheadId, gstrTbodyId);
+				objSortable = new SortableTable(objDynTable);
+				assertEquals(strCorrectState, objSortable.toString());
+
+				//test that a SortableTable can be successfully created if given 3 string inputs
+				objSortable = new SortableTable(gstrTableId, gstrTheadId, gstrTbodyId);
+				assertEquals(strCorrectState, objSortable.toString());
+			} //end testSuccessfulCreation
+			//******
+
+			//******
+			function testFailedCreation() {
+				//check that SortableTable constructor fails correctly if given any incorrect arguments
+
+				try {
+					//create a sortable table with no arguments
+					var objSortable = new SortableTable();
+					//if we didn't error out, that's a problem
+					fail("SortableTable constructor should fail if no arguments are provided");
+				} //end try
+				catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				try {
+					//create a sortable table with a non-string, non-DynamicTable first argument
+					objSortable = new SortableTable(new Object(), gstrTheadId, gstrTbodyId);
+					fail("SortableTable constructor should fail if first argument is not a string is not a string or a DynamicTable");
+				} //end try
+				catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				try {
+					//creat a sortable table with a nonstring second or third argument
+					objSortable = new SortableTable(gstrTableId, gstrTheadId, 12);
+					fail("SortableTable constructor should fail if second or third argument is not a string");
+				} //end try
+				catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				try {
+					//create a sortable table with an undefined second or third argument
+					objSortable = new SortableTable(gstrTableId, undefined, gstrTbodyId);
+					fail("SortableTable constructor should fail if second or third argument is undefined");
+				} //end try
+				catch (e) {
+					if (e instanceof JsUnitException){throw e;}
+					//otherwise, pass -- error is correct behavior
+				} //end catch
+			} //end testFailedCreation
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Test Sortable_setColAndDirection method
+			//******
+			function testSetColWgoodArgs() {
+				//local variables
+				var strCorrectState;
+				var objSortable = new SortableTable(gstrTableId, gstrTheadId, gstrTbodyId);
+
+				//give method a good header id for first time--set selected col and direction
+				strCorrectState = "dynTable: object; tableId: " + gstrTableId + "; theadId: " + gstrTheadId + "; tbodyId: " + gstrTbodyId + "; tbodyElm: undefined; curColIndex: 2; ascendingSort: true; ";
+				objSortable.setColAndDirection(garrHeaderIds[2]);
+				assertEquals(strCorrectState, objSortable.toString());
+
+				//give method a good header id that is the same as existing one--see direction but not selected col change
+				strCorrectState = "dynTable: object; tableId: " + gstrTableId + "; theadId: " + gstrTheadId + "; tbodyId: " + gstrTbodyId + "; tbodyElm: undefined; curColIndex: 2; ascendingSort: false; ";
+				objSortable.setColAndDirection(garrHeaderIds[2]);
+				assertEquals(strCorrectState, objSortable.toString());
+
+				//give method a good header id that is different from current one--reset selected col and direction
+				strCorrectState = "dynTable: object; tableId: " + gstrTableId + "; theadId: " + gstrTheadId + "; tbodyId: " + gstrTbodyId + "; tbodyElm: undefined; curColIndex: 3; ascendingSort: true; ";
+				objSortable.setColAndDirection(garrHeaderIds[3]);
+				assertEquals(strCorrectState, objSortable.toString());
+			} //end testSetColWgoodArgs
+			//******
+
+			//******
+			function testSetColWbadArgs() {
+				//any input (string or nonstring) can be fed to method.  However, if
+				//input cannot be coerced to a string that is an existing header id,
+				//an error is returned.
+
+				var arrBadArgs = new Array("col1", new Object(), undefined, 15);
+				var objSortable = new SortableTable(gstrTableId, gstrTheadId, gstrTbodyId);
+
+				for (var intArgIndex in arrBadArgs) {
+					try {
+						objSortable.setColAndDirection(arrBadArgs[intArgIndex]);
+						fail("SortableTable constructor should fail on argument " + arrBadArgs[intArgIndex]);
+					} //end try
+					catch (e) {
+						if (e instanceof JsUnitException){throw e;}
+						//otherwise, pass -- error is correct behavior
+					} //end catch
+				} //next bad argument
+			} //end testSetColWbadArgs
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Test Sortable_reorderRow method
+			//******
+			function testReorderRowWgoodArgs() {
+				//local variables
+				var strCorrectState;
+				var objBody = document.getElementById(gstrTbodyId);
+				var objSortable = new SortableTable(gstrTableId, gstrTheadId, gstrTbodyId);
+				//must set the tbodyElm property (usually set by functions that use this)
+				objSortable.tbodyElm = objBody
+				var objRow2 = objBody.rows[1];
+				var objRow3 = objBody.rows[2];
+
+				//swap row two with row three
+				strCorrectState = getCorrectHtml(new Array(0,2,1,3,4));
+				objSortable.reorderRow(objRow3, objRow2);
+				assertEquals(strCorrectState, objBody.innerHTML);
+
+				//swap them back again
+				strCorrectState = getCorrectHtml(new Array(0,1,2,3,4));
+				objSortable.reorderRow(objRow2, objRow3);
+				assertEquals(strCorrectState, objBody.innerHTML);
+			} //end testReorderRowWgoodArgs
+			//******
+
+			//******
+		function testReorderRowWbadArgs() {
+				//if any of these cases occur, should get either a typeerror or an
+				//invalid argument error.
+
+				//local variables
+				var strCorrectState;
+				var objBody = document.getElementById(gstrTbodyId);
+				var objSortable = new SortableTable(gstrTableId, gstrTheadId, gstrTbodyId);
+				//must set the tbodyElm property (usually set by functions that use this)
+				objSortable.tbodyElm = objBody
+				var objRow1 = objBody.rows[0];
+
+				try {
+					//both inputs must be row objects, or we get an error
+					objSortable.reorderRow("blue", objRow1);
+					fail("reorderRow should fail if first argument is not a row object");
+				} //end try
+				catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				try {
+					objSortable.reorderRow(objRow1, "blue");
+					fail("reorderRow should fail if second argument is not a row object");
+				} //end try
+				catch (e) {if (e instanceof JsUnitException){throw e;}}
+				finally {
+					//Now, in order to make sure that the table is left unchanged for other tests
+					//in this test case, we have to put the row back in where it started!
+					objBody.insertBefore(objRow1, objBody.rows[0]);
+				} //end finally
+
+				try {
+					//inputs can't both be the same row
+					objSortable.reorderRow(objRow1, objRow1);
+					fail("reorderRow should fail if both arguments reference the same row object");
+				} //end try
+				catch (e) {if (e instanceof JsUnitException){throw e;}}
+				finally {
+					//Now, in order to make sure that the table is left unchanged for other tests
+					//in this test case, we have to put the row back in where it started!
+					objBody.insertBefore(objRow1, objBody.rows[0]);
+				} //end finally
+
+				try {
+					//inputs can't be rows from different tables
+					var objExtraRow = document.getElementById("extraRow");
+					objSortable.reorderRow(objRow1, objExtraRow);
+					fail("reorderRow should fail if arguments reference rows in different tables.");
+				} //end try
+				catch (e) {
+					if (e instanceof JsUnitException){throw e;}
+					//otherwise, pass -- error is correct behavior
+				} //end catch
+				finally {
+					//Now, in order to make sure that the table is left unchanged for other tests
+					//in this test case, we have to put the row back in where it started!
+					objBody.insertBefore(objRow1, objBody.rows[0]);
+				} //end finally
+			} //end testReorderRowWbadArgs
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Test Sortable_sortRows method
+			//******
+			function testSortRows() {
+				//sortRows doesn't take any arguments and doesn't explicitly raise any
+				//errors, so there's no test badArgs function.
+
+				//local variables
+				var objBody = document.getElementById(gstrTbodyId);
+				var objSortable = new SortableTable(gstrTableId, gstrTheadId, gstrTbodyId);
+				//must set the tbodyElm property (usually set by functions that use this)
+				objSortable.tbodyElm = objBody
+
+				//for each test
+				for (var intTestIndex in garrTests) {
+					//get the test data out of the inner array
+					var strColumnId = garrTests[intTestIndex][0];
+					var arrCorrectOrder = garrTests[intTestIndex][1];
+					var arrReverseOrder = garrTests[intTestIndex][2];
+
+					//use the first item as input to set col and direction
+					objSortable.setColAndDirection(strColumnId);
+
+					//call sortRows
+					strCorrectState = getCorrectHtml(arrCorrectOrder);
+					objSortable.sortRows();
+					assertEquals(strCorrectState, objBody.innerHTML);
+
+					//reverse the order and sort again
+					objSortable.setColAndDirection(strColumnId);
+					strCorrectState = getCorrectHtml(arrReverseOrder);
+					objSortable.sortRows();
+					assertEquals(strCorrectState, objBody.innerHTML);
+				} //next test
+			} //end testSortRows
+			//******
+			//------------------------------------------------
+
+
+			//------------------------------------------------
+			//Test Sortable_sort method
+			//******
+			function testSortWgoodArgs() {
+				//local variables
+				var strCorrectState;
+				var objTable = document.getElementById(gstrTableId);
+				var objBody = document.getElementById(gstrTbodyId);
+				var objSortable = new SortableTable(gstrTableId, gstrTheadId, gstrTbodyId);
+
+				//for each test
+				for (var intTestIndex in garrTests) {
+					//get the test data out of the inner array
+					var strColumnId = garrTests[intTestIndex][0];
+					var arrCorrectOrder = garrTests[intTestIndex][1];
+					var arrReverseOrder = garrTests[intTestIndex][2];
+
+					//sort
+					strCorrectState = getCorrectHtml(arrCorrectOrder);
+					objSortable.sort(strColumnId);
+					assertEquals(strCorrectState, objBody.innerHTML);
+					//check that the display property of the table object is block after all those sorts
+					assertEquals("block", objTable.style.display);
+
+					//reverse the order and sort again
+					strCorrectState = getCorrectHtml(arrReverseOrder);
+					objSortable.sort(strColumnId);
+					assertEquals(strCorrectState, objBody.innerHTML);
+					assertEquals("block", objTable.style.display);
+				} //next test
+			} //end testSortWgoodArgs
+			//******
+
+			//******
+			function testSortWbadArgs() {
+				var arrBadArgs = new Array("col1", new Object(), undefined, 15);
+				var objSortable = new SortableTable(gstrTableId, gstrTheadId, gstrTbodyId);
+				var objTable = document.getElementById(gstrTableId);
+
+				for (var intArgIndex in arrBadArgs) {
+					try {
+						objSortable.sort(arrBadArgs[intArgIndex]);
+						fail("sort should fail on argument " + arrBadArgs[intArgIndex]);
+					} //end try
+					catch (e) {
+						if (e instanceof JsUnitException){
+							throw e;
+						} else {
+							//check the display style of the table
+							if (objTable.style.display != "block") {
+								fail("table display style should be block after an error");
+							} //end if
+							//otherwise, pass -- error is correct behavior
+						} //end if
+					} //end catch
+				} //next bad argument
+			} //end testSortWbadArgs
+			//******
+			//------------------------------------------------
+		</script>
+		<button onclick = "gobjSorter = new SortableTable(gstrTableId, gstrTheadId, gstrTbodyId);">Create Sortable Table</button>
+		<table id = "structDataTable">
+			<thead id = "tableHead">
+				<tr>
+					<th id = "structureselect">
+						Select
+					</th>
+					<th id = "structureindex" class = "hiddenElm">
+						<a href = "#" onclick = "gobjSorter.sort('structureindex'); return false;">Index</a>
+					</th>
+					<th id = "structurename">
+						<a href = "#" onclick = "gobjSorter.sort('structurename'); return false;">Name</a>
+					</th>
+					<th id = "structurebest_index:MI:variation">
+						<a href = "#" onclick = "gobjSorter.sort('structurebest_index:MI:variation'); return false;">MI Best Index</a>
+					</th>
+					<th id = "structureaverage:MI:variation">
+						<a href = "#" onclick = "gobjSorter.sort('structureaverage:MI:variation'); return false;">MI Average</a>
+					</th>
+				</tr>
+			</thead>
+			<tbody id = "tableBody">
+				<tr id = "structure0">
+					<td><input type = "radio" name = "rdostructure" value = "1" /></td>
+					<td class = "hiddenElm">0</td>
+					<td align = "middle">Struct 1</td>
+					<td align = "middle">5</td>
+					<td align = "middle">0.05</td>
+				</tr>
+				<tr id = "structure1">
+					<td><input type = "radio" name = "rdostructure" value = "2" /></td>
+					<td class = "hiddenElm">1</td>
+					<td align = "middle">Struct 2</td>
+					<td align = "middle">2</td>
+					<td align = "middle">0.95</td>
+				</tr>
+				<tr id = "structure2">
+					<td><input type = "radio" name = "rdostructure" value = "3" /></td>
+					<td class = "hiddenElm">2</td>
+					<td align = "middle">Struct 3</td>
+					<td align = "middle">1</td>
+					<td align = "middle">1.05</td>
+				</tr>
+				<tr id = "structure3">
+					<td><input type = "radio" name = "rdostructure" value = "4" /></td>
+					<td class = "hiddenElm">3</td>
+					<td align = "middle">Struct 4</td>
+					<td align = "middle">6</td>
+					<td align = "middle">-0.05</td>
+				</tr>
+				<tr id = "structure4">
+					<td><input type = "radio" name = "rdostructure" value = "5" /></td>
+					<td class = "hiddenElm">4</td>
+					<td align = "middle">Struct 5</td>
+					<td align = "middle">3</td>
+					<td align = "middle">0.05</td>
+				</tr>
+			</tbody>
+		</table>
+		<br />
+		<div style = "display:none;">
+			<table id = "extraTable">
+				<tbody id = "extraTbody">
+					<tr id = "extraRow">
+						<td>hi</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</body>
+</html>

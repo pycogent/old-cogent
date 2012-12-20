@@ -1,0 +1,154 @@
+<html>
+	<head>
+		<title>Test Page for ArbitraryColorGenerator object of web_utils.js</title>
+		<script type="text/javascript" src="../../../../jsunit/app/jsUnitCore.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/utils/general_utils.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/utils/web_utils.js"></script>
+	</head>
+	<body>
+		<script language="javascript">
+			/*
+			test_ArbitraryColorGenerator.html
+
+			Tests of methods of ArbitraryColorGenerator class.
+
+			Revision History:
+			Written 2003 by Amanda Birmingham
+			*/
+
+			//------------------------------------------------
+			//Test constants
+			var gascColorsByVal = new Array();
+			gascColorsByVal["a"] = new Array("red", "#aaa");
+			gascColorsByVal["b"] = new Array("blue", "#666");
+			gascColorsByVal["c"] = new Array("yellow", "#111");
+
+			var garrDefaults = new Array("pink", "white");
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Test the constructor
+			//******
+			function test_constructor_goodArgs() {
+				//local variables
+				var objGenerator, strCorrectState;
+
+				//create a new colorgenerator without defaults
+				objGenerator = new ArbitraryColorGenerator(gascColorsByVal);
+
+				//create the correct state string
+				var strCorrectState = "defaults: 0: black; 1: black; ; colorsByVal: " +
+										gascColorsByVal.toString() + "; ";
+
+				//check its state
+				assertEquals(strCorrectState, objGenerator.toString(true));
+
+				//create a new colorgenerator with defaults
+				objGenerator = new ArbitraryColorGenerator(gascColorsByVal, garrDefaults);
+
+				//create the correct state string
+				var strCorrectState = "defaults: " + garrDefaults.toString() + "; colorsByVal: " +
+										gascColorsByVal.toString() + "; ";
+
+				//check its state
+				assertEquals(strCorrectState, objGenerator.toString(true));
+			} //end test_constructor_goodArgs
+			//******
+
+			//******
+			//Test that constructor errors if any of the input variables are of the wrong datatype
+			function test_constructor_badDatatypeArgs() {
+				//call with a nonarray first argument
+				try {
+					var strReturn = new ArbitraryColorGenerator("blue");
+					fail("constructor should fail if first argument is not an array");
+				} catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				//call with a defined, nonarray second argument
+				try {
+					var strReturn = new ArbitraryColorGenerator(gascColorsByVal, "eggs");
+					fail("constructor should fail if second argument is defined but is not an array");
+				} catch (e) {if (e instanceof JsUnitException){throw e;}}
+			} //end test_getColorForValue_badDatatypeArgs
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Test the getColorForValue function
+			//******
+			//Test method for values that have colors defined for them
+			function test_getColorForValue_defined() {
+				//local variables
+				var arrGreyVals = new Array(true, false, undefined);
+
+				for (var intIndex = 0; intIndex < arrGreyVals.length; intIndex++) {
+					//set the current greyscale value
+					var blnGreyscale = arrGreyVals[intIndex];
+					var intGreyIndex = blnGreyscale ? 1 : 0;
+
+					//run through all the tests
+					for (strInputVal in gascColorsByVal) {
+						//get the array of data for this test
+						var arrTestData = gascColorsByVal[strInputVal];
+
+						//get the correct output
+						var strCorrectState = arrTestData[intGreyIndex];
+
+						//create a ArbitraryColorGenerator
+						var objGenerator = new ArbitraryColorGenerator(gascColorsByVal);
+
+						//call getColorForValue
+						var strReturn = objGenerator.getColorForValue(strInputVal, blnGreyscale);
+						var strError = "Incorrect return for input " + strInputVal + " with greyscale " + blnGreyscale;
+						assertEquals(strError, strCorrectState, strReturn);
+					} //next test
+				} //next greyvalue
+			} //end test_getColorForValue_defined
+			//******
+
+			//******
+			//Test method for values that have no colors defined for them,
+			//so should return the default
+			function test_getColorForValue_default() {
+				//local variables
+				var strInputVal = "z";
+				var arrGreyVals = new Array(true, false, undefined);
+
+				for (var intIndex = 0; intIndex < arrGreyVals.length; intIndex++) {
+					//set the current greyscale value
+					var blnGreyscale = arrGreyVals[intIndex];
+					var intGreyIndex = blnGreyscale ? 1 : 0;
+
+					//get the correct output
+					var strCorrectState = garrDefaults[intGreyIndex];
+
+					//create a ArbitraryColorGenerator
+					var objGenerator = new ArbitraryColorGenerator(gascColorsByVal, garrDefaults);
+
+					//call getColorForValue
+					var strReturn = objGenerator.getColorForValue(strInputVal, blnGreyscale);
+					var strError = "Incorrect return for input " + strInputVal + " with greyscale " + blnGreyscale;
+					assertEquals(strError, strCorrectState, strReturn);
+				} //next greyvalue
+			} //end test_getColorForValue_default
+			//******
+
+			//******
+			//Test that method errors if any of the input variables are of the wrong datatype
+			function test_getColorForValue_badDatatypeArgs() {
+				//create a ArbitraryColorGenerator
+				var objGenerator = new ArbitraryColorGenerator(gascColorsByVal);
+
+				//no illegal first argument ... anything not found will simply return the default
+
+				//call with a defined, nonboolean greyscale
+				try {
+					var strReturn = objGenerator.getColorForValue("12", "eggs");
+					fail("getColorForValue should fail if greyscale toggle is defined but is not a boolean");
+				} catch (e) {if (e instanceof JsUnitException){throw e;}}
+			} //end test_getColorForValue_badDatatypeArgs
+			//******
+			//------------------------------------------------
+		</script>
+	</body>
+</html>

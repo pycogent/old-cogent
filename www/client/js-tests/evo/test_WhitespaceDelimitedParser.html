@@ -1,0 +1,132 @@
+<html>
+	<head>
+		<title>Test Page for WhitespaceDelimitedParser class of alignment_parsers.js</title>
+		<script type="text/javascript" src="../../../jsunit/app/jsUnitCore.js"></script>
+		<script type="text/javascript" src="../../js-code/evo/utils/general_utils.js"></script>
+		<script type="text/javascript" src="../../js-code/evo/validation/string_validate.js"></script>
+		<script type="text/javascript" src="../../js-code/evo/error_handler.js"></script>
+		<script type="text/javascript" src="../../js-code/evo/alignment_parsers.js"></script>
+	</head>
+	<body>
+		<script type="text/javascript">
+			/*
+			test_WhitespaceDelimitedParser.html
+
+			Tests of the WhitespaceDelimitedParser class.
+
+			Revision History:
+			10/23/03 Amanda Birmingham: started filling in tests
+			*/
+
+			/*
+			No tests of WdParser_reset_state because it just clears properties
+				and calls same on superclass
+			*/
+
+			//------------------------------------------------
+			//Tests of parse method
+
+			function test_parse_seqOnly() {
+				/* Should correctly populate _sequence_data when no labels */
+
+				test_lines = [	"uagua", "aggua", "cuau", "aguaccagu"];
+				correct_data = [{"label":undefined, "sequence":"uagua", "line":0},
+								{"label":undefined, "sequence":"aggua", "line":1},
+								{"label":undefined, "sequence":"cuau", "line":2},
+								{"label":undefined, "sequence":"aguaccagu", "line":3}];
+
+				//create a new parser and call parse on it
+				test = new WhitespaceDelimitedParser(gobjErrors);
+				test.parse(test_lines);
+
+				//make sure the sequence data is correct
+				assertEquals(correct_data.toString(true),
+					test.getRecordData().toString(true));
+
+				//make sure there are no logged errors
+				assertEquals(0, test.getErrorMsgs().length);
+			} //end test_parse_seqOnly
+
+			function test_parse_seqAndLabel() {
+				/* Should correctly populate _sequence_data with labels */
+
+				test_lines = [	"once upon uagua", "it's aggua",
+								"kings and queens cuau", "seq23 aguaccagu"];
+				correct_data = [{"label":"once upon", "sequence":"uagua", "line":0},
+								{"label":"it's", "sequence":"aggua", "line":1},
+								{"label":"kings and queens", "sequence":"cuau", "line":2},
+								{"label":"seq23", "sequence":"aguaccagu", "line":3}];
+
+				//create a new parser and call parse on it
+				test = new WhitespaceDelimitedParser(gobjErrors);
+				test.parse(test_lines);
+
+				//make sure the sequence data is correct
+				assertEquals(correct_data.toString(true),
+					test.getRecordData().toString(true));
+
+				//make sure there are no logged errors
+				assertEquals(0, test.getErrorMsgs().length);
+			} //end test_parse_seqAndLabel
+
+			function test_parse_someUnlabelled() {
+				/* Should populate _error_msgs when some unlabelled */
+
+				test_lines = [	"once upon uagua", "it's aggua",
+								"cuau", "seq23 aguaccagu", "uuag"];
+				correct_data = [{"label":"once upon", "sequence":"uagua", "line":0},
+								{"label":"it's", "sequence":"aggua", "line":1},
+								{"label":undefined, "sequence":"cuau", "line":2},
+								{"label":"seq23", "sequence":"aguaccagu", "line":3},
+								{"label":undefined, "sequence":"uuag", "line":4}];
+				error_msg = "Some lines appear to have labels while others " +
+								"don't.  Unlabelled line(s): 3, 5.";
+
+				//create a new parser and call parse on it
+				test = new WhitespaceDelimitedParser(gobjErrors);
+				test.parse(test_lines);
+
+
+				//make sure the sequence data is correct
+				assertEquals(correct_data.toString(true),
+					test.getRecordData().toString(true));
+
+				//make sure there are is a logged error
+				assertEquals(1, test.getErrorMsgs().length);
+
+				//make sure the error is as expected
+				assertEquals(error_msg, test.getErrorMsgs()[0]);
+			} //end test_parse_someUnlabelled
+
+			function test_parse_someLabelled() {
+				/* Should populate _error_msgs when some labelled */
+
+				test_lines = [	"once upon uagua", "aggua",
+								"cuau", "seq23 aguaccagu", "uuag"];
+				correct_data = [{"label":"once upon", "sequence":"uagua", "line":0},
+								{"label":undefined, "sequence":"aggua", "line":1},
+								{"label":undefined, "sequence":"cuau", "line":2},
+								{"label":"seq23", "sequence":"aguaccagu", "line":3},
+								{"label":undefined, "sequence":"uuag", "line":4}];
+				error_msg = "Some lines appear to have labels while others " +
+								"don't.  Labelled line(s): 1, 4.";
+
+				//create a new parser and call parse on it
+				test = new WhitespaceDelimitedParser(gobjErrors);
+				test.parse(test_lines);
+
+
+				//make sure the sequence data is correct
+				assertEquals(correct_data.toString(true),
+					test.getRecordData().toString(true));
+
+				//make sure there are is a logged error
+				assertEquals(1, test.getErrorMsgs().length);
+
+				//make sure the error is as expected
+				assertEquals(error_msg, test.getErrorMsgs()[0]);
+			} //end test_parse_someLabelled
+			//------------------------------------------------
+		</script>
+	</body>
+</html>

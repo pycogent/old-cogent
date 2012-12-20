@@ -1,0 +1,81 @@
+<html>
+	<head>
+		<title>Test Page for makeAbsoluteUrl function of web_utils.js</title>
+		<script type = "text/javascript" src="../../../../jsunit/app/jsUnitCore.js"></script>
+		<script type = "text/javascript" src="../../../js-code/evo/utils/web_utils.js"></script>
+	</head>
+	<body>
+		<script type = "text/javascript">
+			/*
+			test_makeAbsoluteUrl.html
+
+			Tests of makeAbsoluteUrl function (public).
+
+			Revision History:
+			Written 2003 by Amanda Birmingham
+			*/
+
+			//Tests of the makeAbsoluteUrl function
+			//******
+			function test_makeAbsoluteUrl() {
+				//correct when tested with regular base and relative urls
+
+				//note that it works correctly with multiple levels of
+				//up-and-back-down relative relations
+				var strCorrectUrl = "http://localhost/scripts/general/iHandleErrors.js";
+				var strReturnedUrl = makeAbsoluteUrl(
+							"http://localhost/Bayes/pages/bfAbout.html",
+							"../../scripts/general/iHandleErrors.js");
+				assertEquals(strCorrectUrl, strReturnedUrl);
+			} //end test_makeAbsoluteUrl
+
+			function test_makeAbsoluteUrl_querystring() {
+				//correct when base url and/or relative url has a querystring
+				//even if querystring contains a url
+				var strCorrectUrl = "http://localhost/cgi-bin/logvisitor.py?pg=http://localhost/cgi-bin/input.py";
+				var strReturnedUrl = makeAbsoluteUrl(
+					"http://localhost/cgi-bin/Bayes/input.py?id=2",
+					"../logvisitor.py?pg=http://localhost/cgi-bin/input.py");
+
+				assertEquals(strCorrectUrl, strReturnedUrl);
+			} //end test_makeAbsoluteUrl_querystring
+
+			function test_makeAbsoluteUrl_endslash() {
+				//correct when base and/or return url ends with a slash
+
+				var strCorrectUrl = "http://localhost/Bayes/help";
+				var strReturnedUrl = makeAbsoluteUrl(
+					"http://localhost/Bayes/",
+					"help");
+				assertEquals(strCorrectUrl, strReturnedUrl);
+
+				var strCorrectUrl = "http://localhost/Bayes/help/";
+				var strReturnedUrl = makeAbsoluteUrl(
+					"http://localhost/Bayes/",
+					"help/");
+				assertEquals(strCorrectUrl, strReturnedUrl);
+			} //end test_makeAbsoluteUrl_endslash
+
+			function test_makeAbsoluteUrl_directory() {
+				//correct when base and/or url is a directory (w/no end slash)
+				var strCorrectUrl = "http://localhost/cgi-bin/results.py";
+				var strReturnedUrl = makeAbsoluteUrl(
+					"http://localhost/Bayes",
+					"../cgi-bin/results.py");
+				assertEquals(strCorrectUrl, strReturnedUrl);
+			} //end test_makeAbsoluteUrl_directory
+
+			function test_makeAbsoluteUrl_badRelative() {
+				//should fail when relative url points above top level
+				//of base url
+
+				try {
+					var strReturnedUrl = makeAbsoluteUrl(
+						"http://www.localhost.com/Bayes",
+						"../../imaginary/place/index.html");
+					fail("makeAbsoluteUrl should fail if relative url points above top level of base url");
+				} catch (e) {if (e instanceof JsUnitException){throw e;}}
+			} //end test_makeAbsoluteUrl_badRelative
+		</script>
+	</body>
+</html>

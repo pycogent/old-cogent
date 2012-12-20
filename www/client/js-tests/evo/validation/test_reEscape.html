@@ -1,0 +1,82 @@
+<html>
+	<head>
+		<title>Test Page for reEscape function of string_validate.js</title>
+		<script type = "text/javascript" src="../../../../jsunit/app/jsUnitCore.js"></script>
+		<script type = "text/javascript" src="../../../js-code/evo/validation/string_validate.js"></script>
+	</head>
+	<body>
+		<script type = "text/javascript">
+			/*
+			test_reEscape.html
+
+			Tests public reEscape function.
+
+			Revision History:
+			Written 2003 by Amanda Birmingham
+			*/
+
+			//******
+			//when tested on an empty string, it should return an empty string
+			function test_reEscape_empty() {
+				var strEmpty = "";
+				var strOutput = reEscape(strEmpty);
+				assertEquals(strEmpty, strOutput);
+			} //end test_reEscape_empty
+			//******
+
+			//******
+			//when tested on a string containing only non-escapable characters,
+			//it should return the input string
+			function test_reEscape_nonescapable() {
+				var strPlain = "abc78%#!";
+				var strOutput = reEscape(strPlain);
+				assertEquals(strPlain, strOutput);
+			} //end test_reEscape_nonescapable
+			//******
+
+			//******
+			//when tested on a string a string containing a blend of escapable and non- characters,
+			//it should escape appropriately
+			function test_reEscape_mixed() {
+				var strMixed = "ab^98*d";
+				var strCorrectReturn = "ab\\^98\\*d"; //note the expected output is ab\^98\*d; extra slashes are required to create this string
+				var strOutput = reEscape(strMixed);
+				assertEquals(strCorrectReturn, strOutput);
+			} //end test_reEscape_mixed
+			//******
+
+			//******
+			//when tested on each escape character, should return that char as escaped string
+			function test_reEscape_escapable() {
+				//local variables
+				var strCurChar, strOutput, strCorrect;
+				var arrTestChars = ["\\", "^", "$", "*", "+", "?", ".", "(", ")", "[", "]", "{", "}"];
+
+				for (var intIndex in arrTestChars) {
+					strCurChar = arrTestChars[intIndex];
+					strOutput = reEscape(strCurChar);
+					strCorrect = "\\" + strCurChar;
+					assertEquals(strCorrect, strOutput);
+				} //next char
+			} //end test_reEscape_escapable
+			//******
+
+			//******
+			//when tested on something that's undefined, should return undefind
+			function test_reEscape_undefined() {
+				var strOutput = reEscape(undefined);
+				assertEquals(undefined, strOutput);
+			} //end test_reEscape_undefined
+
+			//******
+			//There are no bad arguments: any nonstring inputs are converted to strings
+			function test_reEscape_nonstring() {
+				var fltNumber = -12.6;
+				var strCorrect = "-12\\.6";
+				var strOutput = reEscape(fltNumber);
+				assertEquals(strCorrect, strOutput);
+			} //end test_reEscape_nonstring
+			//******
+		</script>
+	</body>
+</html>

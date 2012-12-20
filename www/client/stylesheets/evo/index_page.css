@@ -1,0 +1,15 @@
+td {font-size: 1.05em;}
+.sidebar {
+	padding: 20px;
+	white-space: nowrap;
+	}
+.sidebarLink {text-decoration: none;}
+.disabled {
+	text-decoration: none;
+	color: #888888;
+	}
+.bodyLink {font-weight: normal;}
+.news {
+	border: 1px dashed black;
+	padding: 2px;
+	}

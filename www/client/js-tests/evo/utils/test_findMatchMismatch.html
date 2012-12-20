@@ -1,0 +1,85 @@
+<html>
+	<head>
+		<title>Test Page for findMatchMismatch function of bio_utils.js</title>
+		<script type = "text/javascript" src="../../../../jsunit/app/jsUnitCore.js"></script>
+		<script type = "text/javascript" src="../../../js-code/evo/utils/bio_utils.js"></script>
+		<script type = "text/javascript" src="info_MismatchTests.js"></script>
+	</head>
+	<body>
+		<script type = "text/javascript">
+			/*
+			test_findMatchMismatch.html
+
+			Tests findMatchMismatch function (public).
+
+			Revision History:
+			Written 2003 by Amanda Birmingham
+			*/
+
+			//------------------------------------------------
+			//Test the findMatchMismatch method
+			//******
+			function test_findMatchMismatch() {
+				//for each item of bases
+				for (intFirstIndex in garrBases) {
+					//for each item of bases
+					for (intSecondIndex in garrBases) {
+						//get the inputs to the function we're gonna test
+						var strFirstBase = garrBases[intFirstIndex];
+						var strSecondBase = garrBases[intSecondIndex];
+
+						var strOutput = getOutputFromMatrix(intFirstIndex, intSecondIndex)
+						var arrOutputHalves = strOutput.split("/");
+
+						//call evaluate with base 1 and base 2
+						var ascResults = findMatchMismatch(strFirstBase, strSecondBase);
+
+						//assert that pair entry matches first item in split, turned boolean
+						var strError = "Error for first base " + strFirstBase + " and second base " + strSecondBase;
+						assertEquals(strError + " pair", Boolean(parseInt(arrOutputHalves[0])), ascResults["pair"]);
+
+						//assert that mismatch entry matches second item in split, turned boolean
+						assertEquals(strError + " mismatch", Boolean(parseInt(arrOutputHalves[1])), ascResults["mismatch"]);
+					} //next second base
+				} //next first base
+			} //end testFindMatch
+			//******
+
+			//******
+			function test_findMatchMismatch_invalidArgs() {
+				//If findMatchMismatch is called with missing argument(s), it will throw an error.
+				//If findMatchMismatch is called with arguments cannot be coerced into string
+				//that aren't one of the IUPAC bases, it will error.
+
+				var arrTestFirstPosition = new Array(true, false);
+				var arrTestInputs = new Array(new Object(), "blue", "Q", undefined, 15);
+				var strGoodInput = "A";
+
+				for (strIndex in arrTestFirstPosition) {
+					var blnTestFirstPosition = arrTestFirstPosition[strIndex];
+					for (strTestIndex in arrTestInputs) {
+						var strTestInput = arrTestInputs[strTestIndex];
+
+						try {
+							if (blnTestFirstPosition) {
+								//call findMatchMismatch with invalid second argument
+								var ascReturn = findMatchMismatch(strGoodInput, strTestInput);
+								fail ("findMatchMismatch should fail when second argument is " + strTestInput);
+							} else {
+								//call findMatchMismatch with invalid first argument
+								var ascReturn = findMatchMismatch(strTestInput, strGoodInput);
+								fail ("findMatchMismatch should fail when first argument is " + strTestInput);
+							} //end if
+						} //end try
+						catch (e) {
+							if (e instanceof JsUnitException){throw e;}
+							//otherwise pass--error throwing was the correct behavior
+						} //end catch
+					} //next test argument
+				} //next test position
+			} //end testFindMismatchInvalidArgs
+			//******
+			//------------------------------------------------
+		</script>
+	</body>
+</html>

@@ -1,0 +1,136 @@
+<html>
+	<head>
+		<title>Test Page for InputName object in bio_input_widgets.js</title>
+		<script type="text/javascript" src="../../../../jsunit/app/jsUnitCore.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/error_handler.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/utils/general_utils.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/validation/input_tools.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/validation/bio_input_widgets.js"></script>
+	</head>
+	<body>
+		<script language="javascript">
+			/*
+			test_InputName.html
+
+			Tests of InputName class.
+
+			Revision History:
+			Written 2003 by Amanda Birmingham
+			10/09/03 Amanda Birmingham: Changed script paths to account
+				for branch of this file into BayesFold 1.5. Updated
+				tests to newly guidelines-compliant private method names.
+			10/10/03 Amanda Birminghma: Added elm_id argument to each
+				InputName constructor call to reflect change to interface
+			10/25/03 Amanda Birmingham: removed tests for init; now done in
+				superclass
+			*/
+
+			/*
+			No tests for init: inherited from superclass
+			*/
+
+			//------------------------------------------------
+			//******
+			//Test constants
+			var gstrErrorElmId = "";
+			var gstrFormElmId = "txtAlignName";
+			var garrPossibleValues = new Array();
+			garrPossibleValues.push(37);
+			garrPossibleValues.push("	0.67	f");
+			garrPossibleValues.push("blue");
+			garrPossibleValues.push("");
+			garrPossibleValues.push(true);
+			//******
+
+			//******
+			//Helper functions
+			function setFormValue(strValue) {
+				//put a nonnumber value in the form element
+				document.getElementById(gstrFormElmId).value = strValue;
+			} //end setFormValue
+
+			function getFormValue() {
+				//get the value in the form element
+				return document.getElementById(gstrFormElmId).value;
+			} //end getFormValue
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//******
+			//Test that validate returns true in all cases.
+			//There should be no cases in which validate fails.
+			function test_validate() {
+				//create input object
+				var objInputName = new InputName(gobjErrors, gstrFormElmId);
+
+				//loop over the test values
+				for (var strIndex in garrPossibleValues) {
+					//get the test value
+					var strValue = garrPossibleValues[strIndex];
+
+					//put that value in the form element
+					setFormValue(strValue);
+
+					//call getFormvalue
+					var blnErrorFree = objInputName.validate();
+
+					//check for match with correct output
+					assertEquals(true, blnErrorFree);
+				} //next test value
+			} //end test_validate
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Test the _autocorrect method
+			//******
+			//Tests that _autocorrect does not alter an existing name
+			function test_autocorrect_existingName() {
+				var testValue = "yargabarga ";
+
+				//create input object
+				var objInputName = new InputName(gobjErrors, gstrFormElmId);
+
+				//set the value to testvalue
+				setFormValue(testValue);
+
+				//call autoCorrect
+				form_obj = document.getElementById(gstrFormElmId)
+				objInputName._autocorrect(form_obj);
+
+				//check that the return value is equal to the set value
+				assertEquals(testValue, getFormValue());
+			} //end test_autocorrect_existingName
+			//******
+
+			//******
+			//Test that _autocorrect fills in an empty name with the
+			//correct value
+			function test_autocorrect_noName() {
+				//create input object
+				var objInputName = new InputName(gobjErrors, gstrFormElmId);
+
+				//set the value to empty string
+				setFormValue("");
+
+				//call autoCorrect
+				form_obj = document.getElementById(gstrFormElmId)
+				objInputName._autocorrect(form_obj);
+
+				//create the correct value
+				var correctName = new Date().toString() + " alignment";
+
+				//check that the return value is equal to the set value
+				assertEquals(correctName, getFormValue());
+			} // end test_autocorrect_noName
+			//******
+			//------------------------------------------------
+		</script>
+		<form>
+			<div id = "divNameAndTemp">
+				Object: <input type = "text" name = "txtAlignName" />
+			</div>
+		</form>
+	</body>
+</html>

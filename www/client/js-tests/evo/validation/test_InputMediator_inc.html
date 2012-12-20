@@ -1,0 +1,152 @@
+<html>
+	<head>
+		<title>Test Page for InputMediator object in input_tools.js</title>
+		<script type="text/javascript" src="../../../../jsunit/app/jsUnitCore.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/error_handler.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/utils/general_utils.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/validation/input_tools.js"></script>
+	</head>
+	<body>
+		<script language="javascript">
+			//------------------------------------------------
+			//******
+			//create a dummy mediator object that will gracefully handle any user actions
+			//that are taken before the real object is created
+			var gobjMediator = new Object();
+			gobjMediator.validate = function () {alert ("Input Mediator is not created yet.");}
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//******
+			//test constants
+			var gstrValidateBtnId = "btnValidate";
+			var gstrContinBtnId = "sbtSequences";
+			var gstrTempTextId = "txtTemperature";
+			//******
+
+			//******
+			//Helper function: public mediator function call this
+			//when they encounter an error.  Here it just throws it again.
+			function showMainErrors(e) {
+				throw e;
+			} //end showMainErrors
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Test refreshValidateBtn method
+			//******
+			//Test refreshValidateButton with boolean arguments
+			function test_refreshValidateBtn_goodArgs() {
+				var arrTestInputs = new Array(true, false);
+
+				//loop over each test input (true or false)
+				for (var strIndex in arrTestInputs) {
+					//get the test input
+					var blnInputValue = arrTestInputs[strIndex];
+
+					//run refreshValidateBtn with test value
+					run_refreshValidateBtn(blnInputValue);
+				} //next test input
+			} //end test_refreshValidateBtn_goodArgs
+			//******
+
+			//******
+			//Test refreshValidateBtn with nonboolean args
+			function test_refreshValidateBtn_badArgs() {
+				try {
+					run_refreshValidateBtn("blue");
+					fail("refreshValidateBtn should fail if passed a nonboolean");
+				} catch (e) {if (e instanceof JsUnitException){throw e;}}
+			} //end test_refreshValidateBtn_badArgs
+			//******
+
+			//******
+			//Test refreshValidateBtn with no argument -- make sure default works
+			function test_refreshValidateBtn_noArgs() {
+				run_refreshValidateBtn();
+			} //end test_refreshValidateBtn_badArgs
+			//******
+
+			//******
+			//Helper function
+			function run_refreshValidateBtn(blnInputValue) {
+				//create input object
+				var objInputMediator = new InputMediator(gobjErrors, undefined, gstrContinBtnId, gstrValidateBtnId);
+
+				//call refreshValidateBtn
+				objInputMediator.refreshValidateBtn(blnInputValue);
+
+				//if no input value was given, refreshValidateBtn should have
+				//treated it as true, so we will as well
+				if (blnInputValue == undefined) {blnInputValue = true;}
+
+				//check that the validate button's disabled property is opposite the input value
+				var objValidateBtn = document.getElementById(gstrValidateBtnId);
+				var strError = "Validate button has wrong disabled property";
+				assertEquals(strError, objValidateBtn.disabled, !blnInputValue);
+
+				//check that the continue button's disabled property matches the input value
+				var objContinueBtn = document.getElementById(gstrContinBtnId);
+				strError = "Continue button has wrong disabled property";
+				assertEquals(strError, objContinueBtn.disabled, blnInputValue);
+			} //end run_refreshValidateBtn
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Test validate method
+
+			function FakeWidget(validate_value) {
+				this.validate = function () {return validate_value;}
+				this.updateMsgs = function () {return;}
+				this.ScreenNum = 0;
+			} //end FakeWidget
+
+			//Tests only look at return value.  Implementation
+			//is covered by the tests of the children to which this
+			//method delegates.
+			//******
+			//Test that validate returns false if input(s) are wrong.
+			function test_validate_withErrors() {
+				//create screen pieces, one of which returns true and one false
+				var screen_pieces = new Array()
+				screen_pieces["a"] = new FakeWidget(true);
+				screen_pieces["b"] = new FakeWidget(false);
+				var objInputMediator = new InputMediator(gobjErrors, screen_pieces, gstrContinBtnId, gstrValidateBtnId);
+
+				//run validate
+				var blnValid = objInputMediator.validate();
+				assertEquals(false, blnValid);
+			} //end test_validate_withErrors
+			//******
+
+			//******
+			//Test that validate returns true if inputs are valid.
+			function test_validate_noErrors() {
+				var screen_pieces = new Array()
+				screen_pieces["a"] = new FakeWidget(true);
+				screen_pieces["b"] = new FakeWidget(true);
+				var objInputMediator = new InputMediator(gobjErrors, screen_pieces, gstrContinBtnId, gstrValidateBtnId);
+
+				//run validate
+				var blnValid = objInputMediator.validate();
+				assertEquals(true, blnValid);
+			} //end test_validate_withErrors
+			//******
+			//------------------------------------------------
+		</script>
+		<button name = "btnCreateMediator" onclick = "gobjMediator = new InputMediator(gobjErrors);">Create Mediator</button><br />
+		<form>
+			<div id = "divNameAndTemp">
+				Name: <input type = "text" name = "txtAlignName" /><br />
+				Temperature: <input type = "text" name = "txtTemperature" value = "37" />
+				<div id = "divTemperatureErrors"><br /></div>
+			</div>
+			<button name="btnValidate" class="button" onclick = "return gobjMediator.validate();">Validate</button>
+			<input type="submit" name="sbtSequences" value="Continue" class="button" disabled = "true" onclick = "//return gobjMediator.continue();" />
+			<input type="reset" name="rstSequences" value="Clear" class="button" onclick = "//gobjMediator.clear();" />
+		</form>
+	</body>
+</html>

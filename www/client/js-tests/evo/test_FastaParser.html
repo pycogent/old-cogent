@@ -1,0 +1,165 @@
+<html>
+	<head>
+		<title>Test Page for FastaParser class of alignment_parsers.js</title>
+		<script type="text/javascript" src="../../../jsunit/app/jsUnitCore.js"></script>
+		<script type="text/javascript" src="../../js-code/evo/utils/general_utils.js"></script>
+		<script type="text/javascript" src="../../js-code/evo/validation/string_validate.js"></script>
+		<script type="text/javascript" src="../../js-code/evo/error_handler.js"></script>
+		<script type="text/javascript" src="../../js-code/evo/alignment_parsers.js"></script>
+	</head>
+	<body>
+		<script type="text/javascript">
+			/*
+			test_FastaParser.html
+
+			Tests of the FastaParser class.
+
+			Revision History:
+			10/13/03 Amanda Birmingham: started filling in tests
+			10/22/03 Amanda Birmingham: added test_parse_twice and updated
+				tests to change in interface (results list starting line of
+				record [base 0] not starting line of sequence)
+			10/23/03 Amanda Birmingham: updated test_parse_noEndSeq and
+				test_parse_twoLabels to change to record_data format
+			10/24/03 Amanda Birmingham: updated tests for change to return
+				format of record_data
+			*/
+
+			//------------------------------------------------
+			//Tests of parse method
+
+			function test_parse() {
+				/* Should correctly populate _sequence_data, make no errors */
+
+				test_lines = [	">seq 1", "aggua", ">seq 2", "aguaccagu",
+								"cauga", "ac", ">seq 3", "accgua"];
+				correct_data = [{"label":"seq 1", "sequence":"aggua",
+								"line":0},
+								{"label":"seq 2",
+								"sequence":"aguaccagucaugaac", "line":2},
+								{"label":"seq 3", "sequence":"accgua",
+								"line":6}];
+
+				//create a new parser and call parse on it
+				test = new FastaParser(gobjErrors);
+				test.parse(test_lines);
+
+				//make sure the sequence data is correct
+				assertEquals(correct_data.toString(true),
+					test.getRecordData().toString(true));
+
+				//make sure there are no logged errors
+				assertEquals(0, test.getErrorMsgs().length);
+			} //end test_parse
+
+			function test_parse_twice() {
+				/* Should correctly parse two diff inputs in a row */
+
+				test_lines1 = [	"agguac", "ccauag", ">seq 2", "accauag"];
+				correct_data1 = [{"label":undefined,
+								"sequence":"agguacccauag", "line":0},
+								{"label":"seq 2", "sequence":"accauag",
+								"line":2}];
+
+				test_lines2 = [	">seq 1", "aggua", ">seq 2", "aguaccagu",
+								"cauga", "ac", ">seq 3", "accgua"];
+				correct_data2 = [{"label":"seq 1", "sequence":"aggua",
+								"line":0},
+								{"label":"seq 2",
+								"sequence":"aguaccagucaugaac", "line":2},
+								{"label":"seq 3", "sequence":"accgua",
+								"line":6}];
+
+				test_lines = [test_lines1, test_lines2]
+				correct_data = [correct_data1, correct_data2]
+				num_errors = [1,0]
+
+				//create a new parser and call parse on it
+				test = new FastaParser(gobjErrors);
+
+				for (var test_index in test_lines) {
+					test.parse(test_lines[test_index]);
+
+					//make sure the sequence data is correct
+					assertEquals(correct_data[test_index].toString(true),
+						test.getRecordData().toString(true));
+
+					//make sure there are no logged errors
+					assertEquals(num_errors[test_index],
+						test.getErrorMsgs().length);
+				} //next test
+			} //end test_parse_twice
+
+			function test_parse_noStartLabel() {
+				/* Should log error if start seq has no label */
+
+				test_lines = [	"agguac", "ccauag", ">seq 2", "accauag"];
+				correct_data = [{"label":undefined,
+								"sequence":"agguacccauag", "line":0},
+								{"label":"seq 2", "sequence":"accauag",
+								"line":2}];
+
+				//create a new parser and call parse on it
+				test = new FastaParser(gobjErrors);
+				test.parse(test_lines);
+
+				//make sure the sequence data is correct
+				assertEquals(correct_data.toString(true),
+					test.getRecordData().toString(true));
+
+				//make sure the correct error was logged
+				correct_error = "Sequence starting at line 1 appears to be missing its label";
+				assertEquals(correct_error, test.getErrorMsgs()[0]);
+				assertEquals(1, test.getErrorMsgs().length);
+			} //end test_parse_noStartLabel
+
+			function test_parse_noEndSeq() {
+				/* Should log error if end label has no sequence */
+
+				test_lines = [	">seq 1", "cauag", "aca", ">seq 2"];
+				correct_data = [{"label":"seq 1", "sequence":"cauagaca",
+								"line":0},
+								{"label":"seq 2", "sequence":undefined,
+								"line":3}];
+
+				//create a new parser and call parse on it
+				test = new FastaParser(gobjErrors);
+				test.parse(test_lines);
+
+				//make sure the sequence data is correct
+				assertEquals(correct_data.toString(true),
+						test.getRecordData().toString(true));
+
+				//make sure the correct error was logged
+				correct_error = "Label at line 4 appears to be missing its sequence";
+				assertEquals(correct_error, test.getErrorMsgs()[0]);
+				assertEquals(1, test.getErrorMsgs().length);
+			} //end test_parse_noEndSeq
+
+			function test_parse_twoLabels() {
+				/* Should log error if two labels seen in a row */
+
+				test_lines = [	">seq 1", ">seq 2", "cauga", "acua"]
+
+				correct_data = [{"label":"seq 1", "sequence":undefined,
+								"line":0},
+								{"label":"seq 2", "sequence":"caugaacua",
+								"line":1}];
+
+				//create a new parser and call parse on it
+				test = new FastaParser(gobjErrors);
+				test.parse(test_lines);
+
+				//make sure the sequence data is correct
+				assertEquals(correct_data.toString(true),
+					test.getRecordData().toString(true));
+
+				//make sure the correct error was logged
+				correct_error = "Label at line 1 appears to be missing its sequence";
+				assertEquals(correct_error, test.getErrorMsgs()[0]);
+				assertEquals(1, test.getErrorMsgs().length);
+			} //end test_parse_twoLabels
+			//------------------------------------------------
+		</script>
+	</body>
+</html>

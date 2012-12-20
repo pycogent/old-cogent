@@ -1,0 +1,234 @@
+<html>
+	<head>
+		<title>Test Page for InputErrDisplayer object input_tools.js</title>
+		<script type="text/javascript" src="../../../../jsunit/app/jsUnitCore.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/error_handler.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/utils/general_utils.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/validation/input_tools.js"></script>
+	</head>
+	<body>
+		<script language="javascript">
+			/*
+			test_InputErrDisplayer_private.html
+
+			Tests of private methods of the abstract InputErrDisplayer class.
+
+			Revision History:
+			Written 2003 by Amanda Birmingham
+			10/24/03 Amanda Birmingham: updated tests for interface changes;
+				added tests for new _build_warnings method
+			*/
+
+			/*
+			No tests of (public) updateMsgs because it just calls a sequence
+				of private functions and has no return value
+			*/
+
+			//------------------------------------------------
+			//******
+			//test constants
+			var gstrErrorElmId = "divObjectError";
+			var gstrFormElmId = "txtObject";
+
+			//sythetic errors
+			var garrErrorMsgs = new Array();
+			garrErrorMsgs.push("Sequences must all have same length.");
+			garrErrorMsgs.push("Sequences may contain only UCGTN and -");
+
+			//global input widget
+			var gobjInputWidget = new InputWidget(gobjErrors, gstrFormElmId);
+			//******
+
+			//******
+			//Helper function to create html error msgs
+			function createHtmlErrors(blnBrowserVersion) {
+				var strErrorHtml = "";
+				var strStartSpan = '<SPAN style="COLOR: red">';
+				var strEndSpan = "</SPAN><BR>";
+
+				if (blnBrowserVersion == undefined) {blnBrowserVersion = true;}
+				if (!blnBrowserVersion) {
+					strStartSpan = "<span style = 'color:red;'>";
+					strEndSpan = "</span><br />";
+				} //end if we want the code-generated html, not the browser generated html
+
+				//create the correct error html for the synthetic errors
+				for (var strIndex in garrErrorMsgs) {
+					strErrorHtml += strStartSpan + garrErrorMsgs[strIndex] + strEndSpan;
+				} //next error msg
+
+				return strErrorHtml;
+			} //end createHtmlErrors
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Test the init function
+			//******
+			function test_init() {
+				//local variables
+				var test;
+				var correct_html = "<br />";
+
+				//create an error displayer
+				test = new InputErrDisplayer(gobjErrors,
+					gobjInputWidget, gstrErrorElmId);
+				assertEquals(correct_html, test.ErrorlessHtml);
+			} //end test_init
+			//******
+
+			//******
+			function test_init_badArgs() {
+				//should fail if not passed an errors obj
+				try {
+					var objInputObj = new InputErrDisplayer(gobjInputWidget, gstrErrorElmId);
+					fail("init should fail if not passed an error object");
+				} catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				//should fail if not passed a second arg that has no updateMsgs property
+				//(ie, is not an InputWidget)
+				try {
+					var objInputObj = new InputErrDisplayer(gobjErrors, new Array(), gstrErrorElmId);
+					fail("init should fail if passed a nonstring pageElmId");
+				} catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				//should fail if not passed a non-string error id
+				try {
+					var objInputObj = new InputErrDisplayer(gobjErrors, gobjInputWidget, new Array());
+					fail("init should fail if passed a nonstring errorElmId");
+				} catch (e) {if (e instanceof JsUnitException){throw e;}}
+			} //end test_init_badArgs
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Test the htmlize_err_msgs method
+			//******
+			//Test the method when there are error msgs: make
+			//sure we get back correct error html
+			function test_htmlize_err_msgs_withErrors() {
+				//create an InputErrDisplayer
+				var test = new InputErrDisplayer(gobjErrors,
+					gobjInputWidget, gstrErrorElmId);
+
+				//call htmlize_err_msgs with test errors
+				var strErrorHtml = test._htmlize_err_msgs(garrErrorMsgs);
+
+				//get the correct html
+				var strCorrectHtml = createHtmlErrors(false);
+
+				//make sure we got right output in the error div
+				assertEquals(strCorrectHtml, strErrorHtml);
+			} //end test_htmlize_err_msgs_withErrors
+			//******
+
+			//******
+			//Test the method when there are no error msgs:
+			//make sure we get back an empty string
+			function test_htmlize_err_msgs_errorFree() {
+				//create an InputErrDisplayer
+				var test = new InputErrDisplayer(gobjErrors,
+					gobjInputWidget, gstrErrorElmId);
+
+				//call htmlize_err_msgs
+				var strErrorHtml = test._htmlize_err_msgs(new Array());
+
+				//make sure we got right output in the error div
+				assertEquals("", strErrorHtml);
+			} //end test_htmlize_err_msgs_withErrors
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Tests the refresh_error_div method
+
+			//******
+			//Test the method with error msgs:
+			//Make sure it puts the input html into the div
+			function test_refresh_error_div_withErrors() {
+				//create an InputErrDisplayer
+				var test = new InputErrDisplayer(gobjErrors,
+					gobjInputWidget, gstrErrorElmId);
+
+				//create the test errors
+				var strErrorHtml = createHtmlErrors();
+
+				//call refresh_error_div
+				test._refresh_error_div(strErrorHtml);
+
+				//get the contents of the error div
+				var strResults =
+					document.getElementById(gstrErrorElmId).innerHTML;
+
+				//make sure we got right output in the error div
+				assertEquals(strErrorHtml, strResults);
+			} //end test_refresh_error_div_withErrors
+			//******
+
+			//******
+			//Test the method with no errors:
+			//make sure it puts <br /> into the div
+			function test_refresh_error_div_errorFree() {
+				//create an InputErrDisplayer
+				var test = new InputErrDisplayer(gobjErrors,
+					gobjInputWidget, gstrErrorElmId);
+
+				//call refresh_error_div
+				test._refresh_error_div("");
+
+				//get the contents of the error div
+				var strResults =
+					document.getElementById(gstrErrorElmId).innerHTML;
+
+				//make sure we got right output in the error div
+				assertEquals("<BR>", strResults);
+			} //end test_refresh_error_div_errorFree
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Tests of _build_warning
+
+			//******
+			function test_build_warning() {
+				/* Should generate warning string if warnings exist */
+
+				var test, actual_text;
+				var warnings = ["Too many degenerate nucleotides",
+								"Too many gaps"];
+				var warning_text = "Warning:\nToo many degenerate " +
+								"nucleotides\nToo many gaps";
+
+				test = new InputErrDisplayer(gobjErrors,
+					gobjInputWidget, gstrErrorElmId);
+				actual_text = test._build_warning(warnings);
+
+				//check that the output text is as expected
+				assertEquals(warning_text, actual_text);
+			} //end test_build_warning
+			//******
+
+			//******
+			function test_build_warning_noWarns() {
+				/* Should return undefined if no warnings exist */
+
+				var test, actual_text;
+				test = new InputErrDisplayer(gobjErrors,
+					gobjInputWidget, gstrErrorElmId);
+				actual_text = test._build_warning(new Array());
+
+				//check that the output text is undefined
+				assertEquals(undefined, actual_text);
+
+			} //end test_build_warning_noWarns
+			//******
+			//------------------------------------------------
+		</script>
+		<form>
+			<div id = "divObject">
+				Object: <input type = "text" name = "txtObject" />
+				<div id = "divObjectError" />
+			</div>
+		</form>
+	</body>
+</html>

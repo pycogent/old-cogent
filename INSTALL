@@ -1,0 +1,30 @@
+README
+--------------------------------------------
+
+Installation Instructions for PyEvolve
+
+PyEvolve provides the Python package evo, a collection of classes for analyzing
+sequence evolution.
+
+This document will describe the installation procedure for the evo package
+when this procedure exists. For now, add PyEvolve/lib/python-code to your
+PYTHONPATH to make the evo package and its component modules available for
+import.
+
+Adding a directory to your path:
+
+  bash: export PYTHONPATH='/full/path/to/PyEvolve/lib/python-code'
+  tcsh: setenv PYTHONPATH '/full/path/to/PyEvolve/lib/python-code'
+  Windows:
+    Open RegEdit (regedit at command prompt)
+    Navigate to HKEY_LOCAL_MACHINE\Software\Python\PythonCore\2.3\PythonPath
+    Add a new key (right click -> New -> Key) with the name PyEvolve
+    Click on the folder for the new key and edit its Default value
+      (right click -> Modify) and type in the full path of your directory
+
+To check that the path has been added:
+  Open the interpreter
+  from sys import path
+  print path
+
+You should see the python-code directory near the start of your path.

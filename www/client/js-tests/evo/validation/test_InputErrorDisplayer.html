@@ -1,0 +1,89 @@
+<html>
+	<head>
+		<title>Test Page for InputErrDisplayer object input_tools.js</title>
+		<script type="text/javascript" src="../../../../jsunit/app/jsUnitCore.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/error_handler.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/utils/general_utils.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/validation/input_tools.js"></script>
+	</head>
+	<body>
+		<script language="javascript">
+			/*
+			test_InputErrDisplayer.html
+
+			Tests of public methods of the abstract InputErrDisplayer class.
+
+			Revision History:
+			Written 2003 by Amanda Birmingham
+			10/24/03 Amanda Birmingham: cut out private tests and put in
+				_private page.
+			*/
+
+			//------------------------------------------------
+			//******
+			//test constants
+			var gstrErrorElmId = "divObjectError";
+			var gstrFormElmId = "txtObject";
+
+			//sythetic errors
+			var garrErrorMsgs = new Array();
+			garrErrorMsgs.push("Sequences must all have same length.");
+			garrErrorMsgs.push("Sequences may contain only UCGTN and -");
+
+			//global input widget
+			var gobjInputWidget = new InputWidget(gobjErrors, gstrFormElmId);
+			//******
+
+			//******
+			//Helper function to create html error msgs
+			function createHtmlErrors(blnBrowserVersion) {
+				var strErrorHtml = "";
+				var strStartSpan = '<SPAN style="COLOR: red">';
+				var strEndSpan = "</SPAN><BR>";
+
+				if (blnBrowserVersion == undefined) {blnBrowserVersion = true;}
+				if (!blnBrowserVersion) {
+					strStartSpan = "<span style = 'color:red;'>";
+					strEndSpan = "</span><br />";
+				} //end if we want the code-generated html, not the browser generated html
+
+				//create the correct error html for the synthetic errors
+				for (var strIndex in garrErrorMsgs) {
+					strErrorHtml += strStartSpan + garrErrorMsgs[strIndex] + strEndSpan;
+				} //next error msg
+
+				return strErrorHtml;
+			} //end createHtmlErrors
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Test the updateMsgs method (doesn't take any args, so no bad args test.)
+			//******
+			function test_updateMsgs() {
+				//local variables
+				var objInputErrDisplayer;
+				var strCorrectHtml, strResults;
+
+				//create an InputErrDisplayer and give it errors
+				objInputErrDisplayer = new InputErrDisplayer(gobjErrors, gobjInputWidget, gstrErrorElmId);
+				objInputErrDisplayer._inputWidget._error_msgs = garrErrorMsgs;
+
+				//call updateMsgs
+				objInputErrDisplayer.updateMsgs();
+				strResults = document.getElementById(gstrErrorElmId).innerHTML;
+
+				//make sure we got right output in the error div
+				assertEquals(createHtmlErrors(true), strResults);
+			} //end test_updateMsgs
+			//******
+			//------------------------------------------------
+		</script>
+		<form>
+			<div id = "divObject">
+				Object: <input type = "text" name = "txtObject" />
+				<div id = "divObjectError" />
+			</div>
+		</form>
+	</body>
+</html>

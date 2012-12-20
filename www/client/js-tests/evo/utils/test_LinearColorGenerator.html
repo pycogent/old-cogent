@@ -1,0 +1,138 @@
+<html>
+	<head>
+		<title>Test Page for LinearColorGenerator object of web_utils.js</title>
+		<script type = "text/javascript" src="../../../../jsunit/app/jsUnitCore.js"></script>
+		<script type = "text/javascript" src="../../../js-code/evo/utils/web_utils.js"></script>
+	</head>
+	<body>
+		<script type = "text/javascript">
+			/*
+			test_LinearColorGenerator.html
+
+			Tests of methods of LinearColorGenerator class.
+
+			Revision History:
+			Written 2003 by Amanda Birmingham
+			*/
+
+			//------------------------------------------------
+			//******
+			//Test that constructor errors if any of the input variables are of the wrong datatype
+			function test_constructor_badDatatypeArgs() {
+				var fltNormalBound = 10;
+				var fltSpecialBound = -1;
+
+				//call with a nonfloatingpt normal bound
+				try {
+					var strReturn = new LinearColorGenerator(undefined, fltSpecialBound);
+					fail("constructor should fail if normal bound is not a floating point");
+				} catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				//call with a nonfloatingpt special bound
+				try {
+					var strReturn = new LinearColorGenerator(fltNormalBound, new Array());
+					fail("constructor should fail if special bound is not a floating point");
+				} catch (e) {if (e instanceof JsUnitException){throw e;}}
+			} //end test_getColorForValue_badDatatypeArgs
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Test the getColorForValue function
+			//******
+			function test_getColorForValue() {
+				var arrTestValues = new Array();
+				//normal bound, special bound, color or undefined output, grey output
+				arrTestValues[0] = new Array(-3, 4.5, "1.5", 60, 28);
+				arrTestValues[1] = new Array(-1, -3, "-1.5", 25, 53);
+				arrTestValues[2] = new Array(0, 4, 1.5, 38, 44);
+				arrTestValues[3] = new Array(2, -5, -1, 43, 40);
+
+				var arrGreyVals = new Array(true, false, undefined);
+
+				for (var intIndex = 0; intIndex < arrGreyVals.length; intIndex++) {
+					//set the current greyscale value
+					var blnGreyscale = arrGreyVals[intIndex];
+
+					//run through all the tests
+					for (intIndex in arrTestValues) {
+						//get the array of data for this test
+						var arrTestData = arrTestValues[intIndex];
+
+						//get the data out of the test array
+						var fltNormalBound = arrTestData[0];
+						var fltSpecialBound = arrTestData[1];
+						var varTestValue = arrTestData[2];
+						var strError = "Incorrect return for input " + varTestValue;
+
+						//decide how the output should look based on greyscale setting
+						if (blnGreyscale) {
+							var strOutput = arrTestData[4];
+							var strCorrectState = "rgb(" + strOutput + "%, " + strOutput + "%, " + strOutput + "%)";
+						} else {
+							var strCorrectState = "rgb(" + arrTestData[3] + "%, 0%, 0%)";
+						} //end if
+
+						//create a linearcolorgenerator
+						var objGenerator = new LinearColorGenerator(fltNormalBound, fltSpecialBound);
+
+						//call getColorForValue
+						var strReturn = objGenerator.getColorForValue(varTestValue, blnGreyscale);
+						assertEquals(strError, strCorrectState, strReturn);
+					} //next test
+				} //next greyvalue
+			} //end test_getColorForValue
+			//******
+
+			//******
+			//Test that method errors if any of the input variables are of the wrong datatype
+			function test_getColorForValue_badDatatypeArgs() {
+				var fltInputValue = 4.2;
+				var fltNormalBound = 10;
+				var fltSpecialBound = -1;
+
+				//create a linearcolorgenerator
+				var objGenerator = new LinearColorGenerator(fltNormalBound, fltSpecialBound);
+
+				//call getColorForValue with a nonfloating pt value
+				try {
+					var strReturn = objGenerator.getColorForValue("blue");
+					fail("getColorForValue should fail if input value is not coerceable to a floating point");
+				} catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				//call with a defined, nonboolean greyscale
+				try {
+					var strReturn = objGenerator.getColorForValue(fltInputValue, "eggs");
+					fail("getColorForValue should fail if greyscale toggle is defined but is not a boolean");
+				} catch (e) {if (e instanceof JsUnitException){throw e;}}
+			} //end test_getColorForValue_badDatatypeArgs
+			//******
+
+			//******
+			//Test that method throws errors if input value is not in the specified range
+			function test_getColorForValue_outOfRangeArgs() {
+				//If input param is outside normalBound/specialBound range, method will error
+
+				var fltNormalBound = 10;
+				var fltSpecialBound = -1;
+
+				//create a linearcolorgenerator
+				var objGenerator = new LinearColorGenerator(fltNormalBound, fltSpecialBound);
+
+				try {
+					//call getColorForValue with an out-of-range value
+					var strReturn = objGenerator.getColorForValue(15);
+					fail("getColorForValue should fail if input value is outside the normal/special range in the positive direction");
+				} catch (e) {if (e instanceof JsUnitException){throw e;}}
+
+				try {
+					//call getColorForValue with an out-of-range value (in other direction)
+					var strReturn = objGenerator.getColorForValue(-1.5);
+					fail("getColorForValue should fail if input value is outside the normal/special range in the negative direction");
+				} catch (e) {if (e instanceof JsUnitException){throw e;}}
+			} //end test_getColorForValue_outOfRangeArgs
+			//******
+			//------------------------------------------------
+		</script>
+	</body>
+</html>

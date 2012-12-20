@@ -1,0 +1,68 @@
+<html>
+	<head>
+		<title>evo.controls.tabs template html page</title>
+		<link rel="stylesheet" href="/pyevolve/stylesheets/evo/controls/tabs.css" type = "text/css" />
+		<script type="text/javascript" src="/pyevolve/js-code/evo/controls/tabs.js"></script>
+		<script type = "text/javascript">
+			function initTabs() {
+				//Set the tab which should be selected by default
+				selectTab.selectedType = "one";
+			}
+		</script>
+	</head>
+	<body onload = "initTabs();">
+		<p>
+			This page presents a template of the correct html structure for a tabbed interface
+			using the tab control in PyEvolve's evo package.  Note that the control has both a
+			js and a css part, and that both must be referenced.  Note also that the naming
+			conventions used in this template must be observed: each tab has a unique prefix,
+			and this string is attached to the td, tab div, and palette div ids of the html
+			elements that make up that tab.  (Prepared by Amanda Birmingham.)
+		</p>
+		<table cellspacing = "0" cellpadding="0">
+			<tr>
+				<td>
+				<!-- this inner table lays out the tabs themselves -->
+				<table align="left" cellspacing="0" cellpadding="0">
+					<tr>
+						<td id = "oneCell">
+							<div id="oneTab" class="formatTab" onclick = "selectTab('one');">
+								One
+							</div>
+						</td>
+						<td width="1%"  class = "offFormatCell"><br/></td>
+						<td id = "twoCell" class = "offFormatCell">
+							<div id="twoTab" class="formatTab" onclick="selectTab('two');">
+								Two
+							</div>
+						</td>
+						<td width="1%"  class = "offFormatCell"><br/></td>
+						<td id = "threeCell" class = "offFormatCell">
+							<div id="threeTab" class="formatTab" onclick="selectTab('three');">
+								Three
+							</div>
+						</td>
+						<td width = "100%" class = "offFormatCell"><br /></td>
+					</tr>
+				</table>
+				</td>
+			</tr>
+			<!-- below are the contents of the tabs -->
+			<tr>
+				<td>
+					<div id="onePalette" class="subPalette" style="display: block;">
+						Tab One
+					</div>
+					<div id="twoPalette" class="subPalette" style="display: none;">
+						Tab Two
+					</div>
+					<div id="threePalette" class="subPalette" style="display: none;">
+						Tab Three
+					</div>
+					<br />
+				</td>
+			</tr>
+			<!-- note that tabs can be mixed with palettes by placing a row of palette buttons here -->
+		</table>
+	</body>
+</html>

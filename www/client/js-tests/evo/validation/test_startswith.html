@@ -1,0 +1,100 @@
+<html>
+	<head>
+		<title>Test Page for startswith method in string_validate.js</title>
+		<script type = "text/javascript" src="../../../../jsunit/app/jsUnitCore.js"></script>
+		<script type = "text/javascript" src="../../../js-code/evo/utils/general_utils.js"></script>
+		<script type = "text/javascript" src="../../../js-code/evo/validation/string_validate.js"></script>
+	</head>
+	<body>
+		<script type="text/javascript">
+			/*
+			test_startswith.html
+
+			Tests of the startswith extension method for the String class.
+
+			Revision History:
+			Written 2003 by Amanda Birmingham
+			10/13/03 Amanda Birmingham: added 6 tests
+			*/
+
+			//------------------------------------------------
+			//Tests of startswith extension method
+
+			//******
+			function test_startswith_true() {
+				/* Should return true when string starts with input */
+
+				test_string = "once upon a strange time";
+				real_result = test_string.startswith("once up");
+				assertEquals(true, real_result);
+			} //end test_startswith_true
+			//******
+
+			//******
+			function test_startswith_false() {
+				/* Should return false when string doesn't start with input
+
+				Note that function is case sensitive.
+				*/
+
+				test_string = "once upon a strange time";
+				real_result = test_string.startswith("Once up");
+				assertEquals(false, real_result);
+			} //end test_startswith_false
+			//******
+
+			//******
+			function test_startswith_noInput() {
+				/* Should throw error if no input is given.	*/
+
+				test_string = "once upon a strange time";
+				try {
+					real_result = test_string.startswith();
+					fail("Should fail if no input given");
+				} catch (e) {if (e instanceof JsUnitException){throw e;}}
+			} //end test_startswith_noInput
+			//******
+
+			//******
+			function test_startswith_emptyInput() {
+				/* Should return true when input is empty string
+
+				This follows the behavior of the python method.
+				*/
+
+				test_string = "once upon a strange time";
+				real_result = test_string.startswith("");
+				assertEquals(true, real_result);
+			} //end test_startswith_emptyInput
+			//******
+
+			//******
+			function test_startswith_emptyString() {
+				/* Should return false for everything but empty string
+				when main string is empty
+				*/
+
+				test_string = "";
+				real_result = test_string.startswith("o");
+				assertEquals(real_result, false);
+
+				real_result = test_string.startswith("");
+				assertEquals(true, real_result);
+			} //end test_startswith_emptyString
+			//******
+
+			//******
+			function test_startswith_castable() {
+				/* Should correctly cast castable inputs */
+
+				test_string = "king: a king; a queen is good";
+				test_input = new Object();
+				test_input.king = "a king";
+				real_result = test_string.startswith(test_input);
+				assertEquals(true, real_result);
+			} //end test_startswith_emptyInput
+			//******
+			//------------------------------------------------
+		</script>
+	</body>
+</html>

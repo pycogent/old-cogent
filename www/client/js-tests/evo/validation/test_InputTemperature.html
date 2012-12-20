@@ -1,0 +1,173 @@
+<html>
+	<head>
+		<title>Test Page for InputTemperature object in bio_input_widgets.js</title>
+		<script type="text/javascript" src="../../../../jsunit/app/jsUnitCore.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/error_handler.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/utils/general_utils.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/validation/input_tools.js"></script>
+		<script type="text/javascript" src="../../../js-code/evo/validation/bio_input_widgets.js"></script>
+	</head>
+	<body>
+		<script language="javascript">
+			//------------------------------------------------
+			//******
+			//Test constants
+			var gstrErrorElmId = "divTemperatureErrors";
+			var gstrFormElmId = "txtTemperature";
+			//******
+
+			//******
+			//Helper function
+			function setFormValue(strValue) {
+				//put a nonnumber value in the form element
+				document.getElementById(gstrFormElmId).value = strValue;
+			} //end setFormValue
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//******
+			//Test that getFormValue correctly extracts numbers where available
+			function test_getFormValue_notNaN() {
+				var ascValueAndTemp = new Array();
+				ascValueAndTemp["37"] = 37;
+				ascValueAndTemp[" -15"] = -15;
+				ascValueAndTemp["	0.67	f"] = 0.67;
+
+				//create input object
+				var objInputTemp = new InputTemperature(gobjErrors, gstrFormElmId);
+
+				//loop over the test values
+				for (var strValue in ascValueAndTemp) {
+					//put that value in the form element
+					setFormValue(strValue);
+
+					//call getFormvalue
+					var fltTemperature = objInputTemp.getFormValue();
+
+					//check for match with correct output
+					assertEquals(ascValueAndTemp[strValue], fltTemperature);
+				} //next test value
+			} //end test_getFormValue_notNaN
+			//******
+
+			//******
+			//Test that getFormValue returns NaN when conversion isn't possible
+			function test_getFormValue_NaN() {
+				var testValue = "blue";
+
+				//create input object
+				var objInputTemp = new InputTemperature(gobjErrors, gstrFormElmId);
+
+				//put a nonnumber value in the form element
+				setFormValue(testValue);
+
+				//call getFormvalue
+				var fltTemperature = objInputTemp.getFormValue();
+
+				//check that both are nan
+				assertEquals(isNaN(testValue), isNaN(fltTemperature));
+			}  //end test_getFormValue_NaN
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//******
+			//Test that validate returns true when there are no errors
+			function test_validate_errorFree() {
+				//create input object
+				var objInputTemp = new InputTemperature(gobjErrors, gstrFormElmId);
+
+				//set the value to something between 0 and 100
+				setFormValue(98.5);
+
+				//call validate
+				var blnErrorFree = objInputTemp.validate();
+
+				//check that the errorfree boolean is correct
+				assertEquals(true, blnErrorFree);
+			} //end test_validate_errorFree
+			//******
+
+			//******
+			//Test that validate returns true (and logs correct error msg) when necessary
+			function test_validate_withErrors() {
+				var arrBadValues= new Array();
+				arrBadValues.push("blue");
+				arrBadValues.push("100.5");
+				arrBadValues.push("-1");
+
+				//create input object
+				var objInputTemp = new InputTemperature(gobjErrors, gstrFormElmId);
+
+				//loop over each test
+				for (var strIndex in arrBadValues) {
+					//set the value in the form
+					setFormValue(arrBadValues[strIndex]);
+
+					//call validate
+					var blnErrorFree = objInputTemp.validate();
+
+					//check that the errorfree boolean is false
+					assertEquals(false, blnErrorFree);
+				} //next test
+			} // end test_validate_withErrors
+			//******
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Test the _fillErrorMsgs method
+			//******
+			//Tests that _fillErrorMsgs creates no error msgs when none are needed
+			function test_fillErrorMsgs_errorFree() {
+				//create input object
+				var objInputTemp = new InputTemperature(gobjErrors, gstrFormElmId);
+
+				//set the value to something between 0 and 100
+				setFormValue(98.5);
+
+				//call validate
+				var blnErrorFree = objInputTemp._fill_msgs();
+
+				//check that the errormsgs property is empty
+				assertEquals(0, objInputTemp._error_msgs.length);
+			} //end test_fillErrorMsgs
+			//******
+
+			//******
+			//Test that _fillErrorMsgs logs correct error msgs when necessary
+			function test_fillErrorMsgs_withErrors() {
+				var ascValAndError = new Array();
+				ascValAndError["blue"] = "Temperature must be a number.";
+				ascValAndError["100.5"] = "Temperature must be between 0 and 100.";
+				ascValAndError["-1"] = "Temperature must be between 0 and 100.";
+
+				//create input object
+				var objInputTemp = new InputTemperature(gobjErrors, gstrFormElmId);
+
+				//loop over each test
+				for (var strValue in ascValAndError) {
+					//reset the errormsgs
+					objInputTemp._reset_msgs();
+
+					//set the value in the form
+					setFormValue(strValue);
+
+					//call validate
+					var blnErrorFree = objInputTemp._fill_msgs();
+
+					//check that the errormsg is correct
+					assertEquals(ascValAndError[strValue], objInputTemp._error_msgs[0]);
+				} //next test
+			} // end test_validate_withErrors
+			//******
+			//------------------------------------------------
+		</script>
+		<form>
+			<div id = "divNameAndTemp">
+				Object: <input type = "text" name = "txtTemperature" value = "37" />
+				<div id = "divTemperatureErrors" />
+			</div>
+		</form>
+	</body>
+</html>

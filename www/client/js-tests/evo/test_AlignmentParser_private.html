@@ -1,0 +1,140 @@
+<html>
+	<head>
+		<title>Test Page for AlignmentParser class of alignment_parsers.js</title>
+		<script type="text/javascript" src="../../../jsunit/app/jsUnitCore.js"></script>
+		<script type="text/javascript" src="../../js-code/evo/utils/general_utils.js"></script>
+		<script type="text/javascript" src="../../js-code/evo/error_handler.js"></script>
+		<script type="text/javascript" src="../../js-code/evo/alignment_parsers.js"></script>
+	</head>
+	<body>
+		<script type="text/javascript">
+			/*
+			test_AlignmentParser_private.html
+
+			Tests of private methods of the abstract AlignmentParser class.
+
+			Revision History:
+			10/22/03 Amanda Birmingham: started filling in tests
+			10/24/03 Amanda Birmingham: updated tests to match change to
+				record_data interface and requirement for errors argument
+				to init.
+			*/
+
+			//------------------------------------------------
+			/*
+			No tests for (public) getErrorMsgs or getRecordData:
+				these just call slice
+
+			No tests for AlParser_reset_state because it just clears
+				variables.
+			*/
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Tests of _store_record method
+
+			function help_store_record(test_label, test_sequence, line_num) {
+				/* Do the repeated work of checking the stored record */
+
+				//create a parser
+				test = new AlignmentParser(gobjErrors);
+				test._reset_state();
+
+				//call _store_record
+				test._store_record(test_label, test_sequence, line_num);
+
+				//make sure an array of one record was added to seq data
+				assertEquals(1, test._sequence_data.length)
+
+				//make sure the values in _sequence_data are as expected
+				real_tuple = test._sequence_data.pop();
+				assertEquals(test_label, real_tuple["label"]);
+				assertEquals(test_sequence, real_tuple["sequence"]);
+				assertEquals(line_num, real_tuple["line"]);
+
+				return test;
+			} //end help_store_record
+
+			function test_store_record() {
+				/* Should store seq and label correctly when both present */
+
+				test_label = "seq1";
+				test_sequence = "acuguauaca";
+				line_num = 14;
+
+				help_store_record(test_label, test_sequence, line_num);
+			} //end test_store_record
+
+			function test_store_record_noLabel() {
+				/* Should store sequence correctly when no label present */
+
+				test_label = undefined;
+				test_sequence = "acuguauaca";
+				line_num = 14;
+
+				help_store_record(test_label, test_sequence, line_num);
+			} //end test_store_record_noLabel
+
+			function test_store_record_noSeq() {
+				/* Should store label correctly when no sequence present */
+
+				test_label = "seq 1";
+				test_sequence = undefined;
+				line_num = 14;
+
+				help_store_record(test_label, test_sequence, line_num);
+			} //test_store_record_noSeq
+
+			function test_store_record_bothEmpty() {
+				/* Should store nothing when neither label nor seq present */
+
+				//create a parser
+				test = new AlignmentParser(gobjErrors);
+				test._reset_state();
+
+				//call _store_record
+				test._store_record("", "", 12);
+
+				//make sure no record was added to seq data
+				assertEquals(0, test._sequence_data.length)
+			} //test_store_record_bothEmpty
+
+			function test_store_record_badLineNum() {
+				/* Should fail if line num cannot be cast to pos integer */
+
+				test_label = "seq1";
+				test_sequence = "acuguauaca";
+				line_num = "blue";
+
+				//create a parser
+				test = new AlignmentParser(gobjErrors);
+				test._reset_state();
+
+				//_store_record: fail if line num can't be cast to pos int
+				try {
+					test._store_record(test_label, test_sequence, line_num);
+					fail("_store_record should fail if passed a noncastable line_num");
+				} catch (e) {if (e instanceof JsUnitException){throw e;}}
+			} //end test_store_record_noLineNum
+
+			function test_store_record_noLineNum() {
+				/* Should error if no line num present */
+
+				test_label = "seq1";
+				test_sequence = "acuguauaca";
+				line_num = undefined;
+
+				//create a parser
+				test = new AlignmentParser(gobjErrors);
+				test._reset_state();
+
+				//_store_record: fail if line num is absent
+				try {
+					test._store_record(test_label, test_sequence, line_num);
+					fail("_store_record should fail if not passed a line_num");
+				} catch (e) {if (e instanceof JsUnitException){throw e;}}
+			} //end test_store_record_noLineNum
+			//------------------------------------------------
+		</script>
+	</body>
+</html>

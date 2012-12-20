@@ -1,0 +1,193 @@
+<html>
+	<head>
+		<title>Test Page for FastaParser class of alignment_parsers.js</title>
+		<script type="text/javascript" src="../../../jsunit/app/jsUnitCore.js"></script>
+		<script type="text/javascript" src="../../js-code/evo/utils/general_utils.js"></script>
+		<script type="text/javascript" src="../../js-code/evo/error_handler.js"></script>
+		<script type="text/javascript" src="../../js-code/evo/alignment_parsers.js"></script>
+	</head>
+	<body>
+		<script type="text/javascript">
+			/*
+			test_FastaParser_private.html
+
+			Tests of private methods of FastaParser class.
+
+			Revision History:
+			10/13/03 Amanda Birmingham: started filling in tests
+			10/22/03 Amanda Birmingham: removed test_parse_sequence_newStart
+				since interface has changed.  Updated test_parse_label for
+				change.
+			10/23/03 Amanda Birmingham: updated test_store_accumulators_noSeq
+				to new specs for record_data (empty seq is undefined, not "")
+			10/24/03 Amanda Birmingham: updated tests for change to interface
+				of record_data
+			*/
+
+			//------------------------------------------------
+			/*
+			No tests for FastaParser_reset_state because it just clears
+				variables.
+			No tests for FastaParser_reset_accumulators because it just
+				clears variables.
+			*/
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Tests of FastaParser_store_accumulators
+
+			function test_store_accumulators() {
+				/* Should store seq and label correctly when no errors */
+
+				//create a fastaparser and put reasonable values in its
+				//accumulator properties
+				test = new FastaParser(gobjErrors);
+				test._reset_state();
+
+				test_seq_pieces = ["acu", "gua", "uaca"];
+				test_label = "seq1";
+				test._accumulated_sequence = ["acu", "gua", "uaca"] ;
+				test._curr_label = test_label;
+
+				//call store_accumulators
+				test._store_accumulators();
+
+				//make sure the values in _sequence_data are as expected
+				correct_seq = test_seq_pieces.join("");
+				real_tuple = test._sequence_data.pop();
+				assertEquals(test_label, real_tuple["label"]);
+				assertEquals(correct_seq, real_tuple["sequence"]);
+				assertEquals(0, real_tuple["line"]);
+
+				//make sure there are no errors
+				assertEquals(0, test._error_msgs.length);
+			} //end test_store_accumulators
+
+			function test_store_accumulators_noLabel() {
+				/* Should produce error msg when accumulating no label */
+
+				//create a fastaparser and put reasonable values in its
+				//accumulator properties
+				test = new FastaParser(gobjErrors);
+				test._reset_state();
+
+				test_seq_pieces = ["acu", "gua", "uaca"];
+				test_label = undefined;
+				test._accumulated_sequence = ["acu", "gua", "uaca"] ;
+				test._curr_label = test_label;
+
+				//call store_accumulators
+				test._store_accumulators();
+
+				//make sure the values in _sequence_data are as expected
+				correct_seq = test_seq_pieces.join("");
+				real_tuple = test._sequence_data.pop();
+				assertEquals(test_label, real_tuple["label"]);
+				assertEquals(correct_seq, real_tuple["sequence"]);
+				assertEquals(0, real_tuple["line"]);
+
+				//make sure there is an error
+				correct_error = "Sequence starting at line 1 appears to be missing its label";
+				assertEquals(correct_error, test._error_msgs[0])
+			} //end test_store_accumulators_noLabel
+
+			function test_store_accumulators_noSeq() {
+				/* Should produce error msg when accumulating no sequence */
+
+				//create a fastaparser and put reasonable values in its
+				//accumulator properties
+				test = new FastaParser(gobjErrors);
+				test._reset_state();
+
+				test_label = "seq1";
+				test._accumulated_sequence = [];
+				test._curr_label = test_label;
+				test._line_index = 1;
+
+				//call store_accumulators
+				test._store_accumulators();
+
+				//make sure the values in _sequence_data are as expected
+				real_tuple = test._sequence_data.pop();
+				assertEquals(test_label, real_tuple["label"]);
+				assertEquals(undefined, real_tuple["sequence"]);
+				assertEquals(0, real_tuple["line"]);
+
+				//make sure there is an error
+				correct_error = "Label at line 1 appears to be missing its sequence";
+				assertEquals(correct_error, test._error_msgs[0])
+			} //end test_store_accumulators_noSeq
+
+			function test_store_accumulators_bothEmpty() {
+				/* Should ignore when label and sequence both empty */
+
+				//create a fastaparser and put reasonable values in its
+				//accumulator properties
+				test = new FastaParser(gobjErrors);
+				test._reset_state();
+
+				test._accumulated_sequence = [];
+				test._curr_label = undefined;
+				test._line_index = 1;
+
+				//call store_accumulators
+				test._store_accumulators();
+
+				//make sure no sequence data was stored
+				assertEquals(0, test._sequence_data.length);
+			} //end test_store_accumulators_bothEmpty
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Tests of FastaParser_parse_sequence
+			//No test for if line is empty: treated just the same as
+			//non-empty case.
+			//No tests for if line is not string: up to parse function to
+			//prevent that from happening
+
+			function test_parse_sequence() {
+				/* Should correctly accumulate sequence */
+
+				existing = "agcuag";
+				test_line = "caug";
+
+				//create a fastaparser and put reasonable values in its
+				//accumulator properties
+				test = new FastaParser(gobjErrors);
+				test._reset_state();
+				test._accumulated_sequence = [existing];
+
+				//call parse_sequence and make sure accumulated_sequence
+				//has been correctly updated
+				test._parse_sequence(test_line);
+				correct_array = [existing, test_line];
+				assertEquals(correct_array.toString(),
+							test._accumulated_sequence.toString());
+			} //end test_parse_sequence
+			//------------------------------------------------
+
+			//------------------------------------------------
+			//Tests of FastaParser_parse_label
+			//Note: not bothering to check it with bad input: it is
+			//the parse function's job to send it only lines that
+			//actually have content/start with a label char.
+
+			function test_parse_label() {
+				/* Should correctly populate _curr_label from line */
+
+				test = new FastaParser(gobjErrors);
+				test._reset_state();
+				test_label = "label 1's comp";
+				test_line_num = 12;
+				test_line = test.FASTA_LABEL_CHAR + test_label;
+
+				test._parse_label(test_line, test_line_num);
+				assertEquals(test_label, test._curr_label);
+
+				//should correctly reset _record_start_line_num
+				assertEquals(test_line_num, test._record_start_line_num);
+			} //end test_parse_label
+			//------------------------------------------------
+		</script>
+	</body>
+</html>

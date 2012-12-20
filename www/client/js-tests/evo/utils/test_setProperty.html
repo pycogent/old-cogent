@@ -1,0 +1,78 @@
+<html>
+	<head>
+		<title>Test Page for setProperty function of general_utils.js</title>
+		<script type = "text/javascript" src="../../../../jsunit/app/jsUnitCore.js"></script>
+		<script type = "text/javascript" src="../../../js-code/evo/utils/general_utils.js"></script>
+	</head>
+	<body>
+		<script language="javascript">
+			/*
+			test_setProperty.html
+
+			Tests public setProperty function.
+
+			Revision History:
+			Written 2003 by Amanda Birmingham
+			*/
+
+			function testSetPropertyWvalidArgs() {
+				//local constants
+				var objConstantParent = new Object();
+				objConstantParent.labelEnds = true;
+				objConstantParent.baseSeparation = 50;
+				objConstantParent.stemWidth = 75;
+
+				//the following are all valid inputs to setFormatConstant.
+				//Since setFormatConstant doesn't make any assumptions about the object is
+				//is setting the constant for, I can't think of any invalid inputs unless
+				//they were invalid property names ... are there such things?
+				var ascNewValByProperty = new Array();
+				ascNewValByProperty["labelEnds"] = false;
+				ascNewValByProperty["baseSeparation"] = 50;
+				ascNewValByProperty["stemWidth"] = 100;
+
+				//for each of the new values
+				for (strProperty in ascNewValByProperty) {
+					//get the new value
+					var varNewValue = ascNewValByProperty[strProperty];
+
+					//work out what the correct value of the return variable should be
+					var blnCorrectReturn = (varNewValue == objConstantParent[strProperty])?false:true;
+
+					//call setformatconstant on the function
+					var blnRealReturn = setProperty(objConstantParent, strProperty, varNewValue);
+
+					//generate the error string, in case we need it later.
+					var strError = "Real output " + blnRealReturn + " did not match correct state " + blnCorrectReturn;
+
+					//assert that real output equals correct output
+					assertEquals(strError, blnCorrectReturn, blnRealReturn);
+
+					//assert on state of object to make sure that was changed correctly
+					assertEquals(objConstantParent[strProperty], varNewValue);
+				} //next new value
+			} //end testSetPropertyWvalidArgs
+
+			function testSetPropertyWinvalidArgs() {
+				//Since setFormatConstant doesn't make any assumptions about the object is
+				//is setting the constant for, I can't think of any way the second and third
+				//arguments could have invalid inputs unless there are such things as invalid
+				//property names ...
+				//Anyway, I figure the only plausible invalid argument is where the first
+				//argument is not an object.
+
+				//local constants
+				var strProperty = "labelEnds";
+				var strValue = true;
+
+				try {
+					setProperty(undefined, strProperty, strValue);
+
+					//if we haven't errored out yet, we have a problem
+					fail("First argument undefined should cause a failure.")
+				} //end try
+				catch (e) {if (e instanceof JsUnitException){throw e;}}
+				} //next bad argument
+		</script>
+	</body>
+</html>
